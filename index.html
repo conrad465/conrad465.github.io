@@ -5,18 +5,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Boston North Station Dashboard</title>
     <style>
-        /* Warm Oat & Linen Kitchen Theme */
+        /* Rotating Destination Background Theme */
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
-            background: #e6e2d8; 
-            color: #2d2a26; 
+            background: #2a2a28; 
+            color: #f3f1ec; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
             overflow: hidden; 
+        }
+
+        /* Two crossfading full-screen photo layers, swapped every few minutes */
+        .bg-photo { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background-size: cover; background-position: center; 
+            opacity: 0; 
+            transition: opacity 3s ease-in-out; 
+            z-index: 0; 
+        }
+        .bg-photo.is-visible { opacity: 1; }
+        /* Dark scrim so tiles/text stay readable over any photo */
+        .bg-scrim { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: linear-gradient(180deg, rgba(20,18,15,0.25), rgba(20,18,15,0.38)); 
+            z-index: 1; 
+        }
+
+        /* Bing "wallpaper of the day" caption, bottom of page */
+        .bg-caption {
+            position: fixed; left: 0; bottom: 0; width: 100%;
+            box-sizing: border-box;
+            padding: 6px 16px;
+            font-size: 14px;
+            color: rgba(255,255,255,0.85);
+            text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+            background: linear-gradient(0deg, rgba(0,0,0,0.35), rgba(0,0,0,0));
+            z-index: 3;
+            text-align: right;
+            transition: opacity 1s ease-in-out;
         }
         
         /* Pixel Shifting Dashboard Container */
         .dashboard { 
-            display: flex; flex-direction: row; 
+            position: relative; z-index: 2;
+            display: flex; flex-direction: column;
             width: 96vw; height: 96vh; margin: 2vh 2vw;
             animation: pixelShift 300s infinite alternate ease-in-out;
         }
@@ -30,29 +61,33 @@
         }
 
         /* Two-Column Layout */
+        .content-row {
+            display: flex; flex-direction: row;
+            width: 100%; flex: 1; min-height: 0;
+        }
         .col-left { 
-            width: 55%; padding: 12px 20px; box-sizing: border-box; 
+            width: 55%; padding: 0 10px 12px 10px; box-sizing: border-box; 
             display: flex; flex-direction: column; overflow-y: hidden; 
         }
         .col-right { 
-            width: 45%; padding: 12px 20px; box-sizing: border-box; 
+            width: 45%; padding: 8px 10px 12px 10px; box-sizing: border-box; 
             display: flex; flex-direction: column; overflow-y: hidden; 
         }
 
-        /* Typography & Headers */
+        /* Full-width time + weather bar */
         .header-container {
-            display: flex; justify-content: space-between; align-items: flex-end;
-            border-bottom: 2px solid #d1ccc1; padding-bottom: 5px; margin-bottom: 8px;
+            width: 100%; box-sizing: border-box;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 16px 11px;
+            margin-bottom: 14px;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.09);
+            border: 1px solid rgba(255,255,255,0.16);
+            -webkit-backdrop-filter: blur(6px);
+            backdrop-filter: blur(6px);
+            box-shadow: 0 4px 14px -4px rgba(0,0,0,0.20);
         }
-        .header-time { font-size: 36px; font-weight: 600; color: #4a4036; }
-
-        h2 { 
-            font-size: 16px; 
-            margin-top: 8px; margin-bottom: 4px; 
-            color: #4a6b5d; 
-            letter-spacing: 0.5px;
-            font-weight: 600;
-        }
+        .header-time { font-size: 38px; font-weight: 600; color: #ffffff; text-shadow: 0 2px 6px rgba(0,0,0,0.5); }
 
         /* MBTA Subway Grid (2x2) */
         /* iPad Air 1 (iOS 12 Safari) does not support flexbox "gap", so tiles */
@@ -66,38 +101,50 @@
             gap: 10px; 
         }
         .subway-quadrant { 
-            background: #f7f5f0; 
+            background: rgba(255,255,255,0.09); 
+            -webkit-backdrop-filter: blur(6px); 
+            backdrop-filter: blur(6px); 
             border-radius: 12px; 
             padding: 14px 10px; box-sizing: border-box;
             border-top: 6px solid #555;
-            box-shadow: 0 4px 10px -4px rgba(0,0,0,0.06); 
+            box-shadow: 0 4px 14px -4px rgba(0,0,0,0.25); 
             text-align: center; 
         }
         .quad-orange { border-top-color: #f97316; } 
         .quad-green { border-top-color: #10b981; }
         
-        .quad-title { font-size: 28px; font-weight: bold; margin-bottom: 8px; color: #7a756d; text-transform: uppercase; letter-spacing: 0.5px;}
+        .quad-title { font-size: 28px; font-weight: bold; margin-bottom: 8px; color: rgba(255,255,255,0.85); text-transform: uppercase; letter-spacing: 0.5px; text-shadow: 0 1px 4px rgba(0,0,0,0.4);}
         .train-row { 
             display: flex; justify-content: center; 
             margin-bottom: 4px; 
             font-size: 33px; /* 50% larger */
         }
-        .time-away { font-weight: bold; color: #2b7a59; }
+        .time-away { font-weight: bold; color: #6fe3a5; text-shadow: 0 1px 4px rgba(0,0,0,0.4); }
 
-        /* Weather Module */
-        .weather-container { background: #f7f5f0; padding: 16px; border-radius: 14px; box-shadow: 0 4px 10px -4px rgba(0,0,0,0.06); display: flex; flex-direction: column; }
-        .weather-main { display: flex; align-items: center; margin-bottom: 8px; }
-        .weather-temp { font-size: 33px; font-weight: 600; color: #2d2a26; } /* 50% larger */
-        .weather-desc { font-size: 33px; color: #635f58; margin-left: 15px; font-weight: 500;} /* 50% larger */
-        .weather-details { font-size: 33px; color: #8a847b; display: flex; gap: 12px; margin-top: 2px; font-weight: 600;} /* 50% larger */
+        .header-weather { 
+            display: flex; align-items: baseline;
+            font-size: 20px; 
+            white-space: nowrap;
+        }
+        .header-weather > span { margin-left: 10px; }
+        .header-weather > span:first-child { margin-left: 0; }
+        .hw-temp { font-size: 28px; font-weight: 600; color: #ffffff; text-shadow: 0 2px 6px rgba(0,0,0,0.5); }
+        .hw-desc { font-size: 28px; color: #f3f1ec; font-weight: 500; text-shadow: 0 2px 6px rgba(0,0,0,0.5); }
+        .hw-details { font-size: 22px; color: rgba(255,255,255,0.8); font-weight: 500; text-shadow: 0 2px 6px rgba(0,0,0,0.5); }
+
+        /* News Module */
+        .news-container { background: rgba(255,255,255,0.09); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); padding: 8px 14px; border-radius: 14px; box-shadow: 0 4px 14px -4px rgba(0,0,0,0.25); }
+        .news-item { border-bottom: 1px solid rgba(255,255,255,0.2); padding: 6px 0; font-size: 18px; color: #ffffff; text-shadow: 0 1px 4px rgba(0,0,0,0.4); line-height: 1.3; }
+        .news-item:last-child { border-bottom: none; }
+        .news-rank { font-weight: 700; color: #6fe3a5; margin-right: 6px; }
 
         /* Sports Module */
-        .sports-container { background: #f7f5f0; padding: 8px 14px; border-radius: 14px; box-shadow: 0 4px 10px -4px rgba(0,0,0,0.06); }
-        .sport-game { display: flex; justify-content: space-between; border-bottom: 1px solid #e1dcd3; padding: 4px 0; font-size: 20px; }
+        .sports-container { background: rgba(255,255,255,0.09); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); padding: 8px 14px; border-radius: 14px; box-shadow: 0 4px 14px -4px rgba(0,0,0,0.25); margin-top: 8px; }
+        .sport-game { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.2); padding: 4px 0; font-size: 20px; }
         .sport-game:last-child { border-bottom: none; }
-        .team-name { font-weight: 600; color: #2d2a26; }
-        .game-status { color: #635f58; font-weight: 500;}
-        .game-live { color: #c94f3c; font-weight: bold; animation: pulse 2s infinite; }
+        .team-name { font-weight: 600; color: #ffffff; text-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+        .game-status { color: rgba(255,255,255,0.8); font-weight: 500;}
+        .game-live { color: #ff8a75; font-weight: bold; animation: pulse 2s infinite; }
 
         @keyframes pulse {
             0% { opacity: 1; }
@@ -108,83 +155,148 @@
         /* Alerts List */
         #alerts-container { margin-top: 10px; }
         .alert-item { 
-            background: #fbeae9; 
+            background: rgba(217,83,79,0.25); 
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
             border-left: 5px solid #d9534f; 
             padding: 8px 12px;
             margin-bottom: 6px; 
-            font-size: 12px; 
+            font-size: 14px; 
             line-height: 1.4; 
             border-radius: 8px; 
-            color: #7a2b29;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            color: #ffffff;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
         }
         .alert-good { 
-            background: #e9f5ee; 
+            background: rgba(43,122,89,0.25); 
             border-left-color: #2b7a59; 
-            color: #1e523b;
+            color: #ffffff;
         }
     </style>
 </head>
 <body>
 
+    <div id="bg-layer-1" class="bg-photo is-visible"></div>
+    <div id="bg-layer-2" class="bg-photo"></div>
+    <div class="bg-scrim"></div>
+    <div id="bg-caption" class="bg-caption"></div>
+
     <div class="dashboard">
-        <!-- Left Column: Subway & Alerts -->
-        <div class="col-left">
-            <div class="header-container">
-                <div id="main-clock" class="header-time">--:--</div>
-            </div>
-            
-            <div class="subway-grid">
-                <!-- Orange Line Southbound -->
-                <div class="subway-quadrant quad-orange">
-                    <div class="quad-title">Southbound</div>
-                    <div id="orange-inbound"><div class="train-row">Loading...</div></div>
-                </div>
-                
-                <!-- Orange Line Northbound -->
-                <div class="subway-quadrant quad-orange">
-                    <div class="quad-title">Northbound</div>
-                    <div id="orange-outbound"><div class="train-row">Loading...</div></div>
-                </div>
-
-                <!-- Green Line Westbound -->
-                <div class="subway-quadrant quad-green">
-                    <div class="quad-title">Westbound</div>
-                    <div id="green-inbound"><div class="train-row">Loading...</div></div>
-                </div>
-
-                <!-- Green Line Eastbound -->
-                <div class="subway-quadrant quad-green">
-                    <div class="quad-title">Eastbound</div>
-                    <div id="green-outbound"><div class="train-row">Loading...</div></div>
-                </div>
-            </div>
-
-            <div id="alerts-container">
-                <div class="alert-item">Checking alerts...</div>
+        <div class="header-container">
+            <div id="main-clock" class="header-time">--:--</div>
+            <div class="header-weather" id="header-weather">
+                <span class="hw-temp" id="weather-temp">--°F</span>
+                <span class="hw-desc" id="weather-desc">Loading...</span>
+                <span class="hw-details" id="weather-details">H: --° | L: --° | Rain: --%</span>
             </div>
         </div>
 
-        <!-- Right Column: Weather & Sports -->
-        <div class="col-right">
-            <div class="weather-container">
-                <div class="weather-main">
-                    <div class="weather-temp" id="weather-temp">--°F</div>
-                    <div class="weather-desc" id="weather-desc">Loading...</div>
+        <div class="content-row">
+            <!-- Left Column: Subway & Alerts -->
+            <div class="col-left">
+                <div class="subway-grid">
+                    <!-- Orange Line Southbound -->
+                    <div class="subway-quadrant quad-orange">
+                        <div class="quad-title">Forest Hills</div>
+                        <div id="orange-inbound"><div class="train-row">Loading...</div></div>
+                    </div>
+
+                    <!-- Orange Line Northbound -->
+                    <div class="subway-quadrant quad-orange">
+                        <div class="quad-title">Oak Grove</div>
+                        <div id="orange-outbound"><div class="train-row">Loading...</div></div>
+                    </div>
+
+                    <!-- Green Line Westbound -->
+                    <div class="subway-quadrant quad-green">
+                        <div class="quad-title">Westbound</div>
+                        <div id="green-inbound"><div class="train-row">Loading...</div></div>
+                    </div>
+
+                    <!-- Green Line Eastbound -->
+                    <div class="subway-quadrant quad-green">
+                        <div class="quad-title">Eastbound</div>
+                        <div id="green-outbound"><div class="train-row">Loading...</div></div>
+                    </div>
                 </div>
-                <div class="weather-details" id="weather-details">
-                    <span>H: --°</span> | <span>L: --°</span> | <span>Rain: --%</span>
+
+                <div id="alerts-container">
+                    <div class="alert-item">Checking alerts...</div>
                 </div>
             </div>
 
-            <h2>My Teams</h2>
-            <div class="sports-container" id="sports-container">
-                <div class="sport-game">Loading sports data...</div>
+            <!-- Right Column: News & Sports -->
+            <div class="col-right">
+                <div class="news-container" id="news-container">
+                    <div class="news-item">Loading Boston headlines...</div>
+                </div>
+
+                <div class="sports-container" id="sports-container">
+                    <div class="sport-game">Loading sports data...</div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
+        // --- 0. ROTATING BING "WALLPAPER OF THE DAY" BACKGROUND ---
+        // bing.com's own image-archive endpoint doesn't send CORS headers, so it
+        // can't be fetched directly from a browser. bingw.jasonzeng.dev is a small
+        // public proxy built specifically for this (JSON metadata + hotlinkable
+        // image), built on top of Bing's daily/recent wallpapers.
+        var BING_PROXY = 'https://bingw.jasonzeng.dev/';
+        var bingImages = []; // { url, caption }
+        var bgIndex = -1;
+        var bgShowingLayer1 = true;
+
+        function fetchBingDay(index) {
+            return fetch(BING_PROXY + '?resolution=1920x1080&index=' + index + '&format=json', { cache: 'no-store' })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    return { url: data.url, caption: (data.title ? data.title + ' — ' : '') + data.copyright };
+                })
+                .catch(function() { return null; });
+        }
+
+        function preloadAndSwap(entry) {
+            var img = new Image();
+            img.onload = function() {
+                var showEl = document.getElementById(bgShowingLayer1 ? 'bg-layer-2' : 'bg-layer-1');
+                var hideEl = document.getElementById(bgShowingLayer1 ? 'bg-layer-1' : 'bg-layer-2');
+                showEl.style.backgroundImage = 'url(' + entry.url + ')';
+                showEl.classList.add('is-visible');
+                hideEl.classList.remove('is-visible');
+                bgShowingLayer1 = !bgShowingLayer1;
+
+                var captionEl = document.getElementById('bg-caption');
+                captionEl.style.opacity = 0;
+                setTimeout(function() {
+                    captionEl.innerText = entry.caption || '';
+                    captionEl.style.opacity = 1;
+                }, 300);
+            };
+            img.src = entry.url;
+        }
+
+        function rotateBackground() {
+            if (bingImages.length === 0) return;
+            bgIndex = (bgIndex + 1) % bingImages.length;
+            preloadAndSwap(bingImages[bgIndex]);
+        }
+
+        // Grab today's photo plus the last several days, so there's a real
+        // rotation instead of showing one static image on loop.
+        Promise.all([0, 1, 2, 3, 4, 5].map(fetchBingDay))
+        .then(function(results) {
+            bingImages = results.filter(function(r) { return r && r.url; });
+            if (bingImages.length > 0) {
+                rotateBackground();
+                setInterval(rotateBackground, 180000); // every 3 minutes
+            }
+        });
+
+
         // --- 1. CLOCK ---
         function updateClock() {
             var now = new Date();
@@ -321,10 +433,8 @@
                     var low = Math.round(data.daily.temperature_2m_min[0]);
                     var rainChance = data.daily.precipitation_probability_max[0] || 0;
                     
-                    document.getElementById('weather-details').innerHTML = 
-                        '<span>H: ' + high + '°</span> | ' +
-                        '<span>L: ' + low + '°</span> | ' +
-                        '<span>Rain: ' + rainChance + '%</span>';
+                    document.getElementById('weather-details').innerText = 
+                        'H: ' + high + '° | L: ' + low + '° | Rain: ' + rainChance + '%';
                 }
             });
         }
@@ -428,6 +538,35 @@
         }
 
 
+        // --- 5b. LOCAL BOSTON NEWS ---
+        function fetchNews() {
+            // WBUR's current /news/feed endpoint is a feed landing page rather than
+            // a reliable story RSS stream. Use Google News' RSS search for WBUR news
+            // and keep rss2json only as the RSS->JSON compatibility bridge.
+            var rss = 'https://news.google.com/rss/search?q=site%3Awbur.org%2Fnews&hl=en-US&gl=US&ceid=US%3Aen';
+            var url = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rss);
+            fetch(url, { cache: 'no-store' })
+            .then(function(res) { return res.json(); })
+            .then(function(json) {
+                var container = document.getElementById('news-container');
+                if (json.status !== 'ok' || !json.items || json.items.length === 0) {
+                    container.innerHTML = '<div class="news-item">No headlines available.</div>';
+                    return;
+                }
+                var top3 = json.items.slice(0, 3);
+                var html = '';
+                for (var i = 0; i < top3.length; i++) {
+                    html += '<div class="news-item"><span class="news-rank">' + (i + 1) + '.</span>' + top3[i].title + '</div>';
+                }
+                container.innerHTML = html;
+            })
+            .catch(function(err) {
+                console.error('News fetch error:', err);
+                document.getElementById('news-container').innerHTML = '<div class="news-item">Headlines unavailable.</div>';
+            });
+        }
+
+
         // --- 6. TIMERS & INITIALIZATION ---
         function updateFastData() {
             fetchSubway();
@@ -437,6 +576,7 @@
         
         function updateSlowData() {
             fetchWeather();
+            fetchNews();
         }
 
         updateFastData();
