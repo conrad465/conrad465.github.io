@@ -121,11 +121,11 @@
         .quad-orange { border-top-color: #f97316; } 
         .quad-green { border-top-color: #10b981; }
         
-        .quad-title { font-size: 45px; font-weight: bold; margin-bottom: 0; color: rgba(255,255,255,0.9); text-transform: uppercase; letter-spacing: 0.5px; text-shadow: 0 2px 5px rgba(0,0,0,0.78);}
+        .quad-title { font-size: 54px; font-weight: bold; margin-bottom: 0; color: rgba(255,255,255,0.9); text-transform: uppercase; letter-spacing: 0.5px; text-shadow: 0 2px 5px rgba(0,0,0,0.78);}
         .train-row { 
             display: flex; justify-content: center; 
             margin-bottom: 4px; 
-            font-size: 45px; /* 15% smaller than the previous 53px size */
+            font-size: 54px; /* 20% larger than the previous 45px size */
         }
         .time-away { font-weight: bold; color: #6fe3a5; text-shadow: 0 2px 5px rgba(0,0,0,0.78); }
         .quad-orange .time-away {color: #f97316;}
@@ -724,18 +724,18 @@
                     if (!shouldShow) continue;
 
                     gamesFound++;
-                    var vsText = (awayTeam.team.shortDisplayName || awayTeam.team.name) + ' @ ' + (homeTeam.team.shortDisplayName || homeTeam.team.name);
+                    var vsText = (awayTeam.team.shortDisplayName || awayTeam.team.name) + '&nbsp; @ &nbsp;' + (homeTeam.team.shortDisplayName || homeTeam.team.name);
                     var statusHtml = '';
 
                     if (isFinal) {
-                        statusHtml = awayTeam.score + ' - ' + (homeTeam.score || '0');
+                        statusHtml = '&nbsp;' + awayTeam.score + ' - ' + (homeTeam.score || '0');
                     } else if (isLive) {
-                        statusHtml = '<span class="game-live">' + awayTeam.score + ' - ' + homeTeam.score + '</span>';
+                        statusHtml = '<span class="game-live">&nbsp;' + awayTeam.score + ' - ' + homeTeam.score + '</span>'; 
                     } else {
                         var gDate = new Date(game.date);
                         var dayStr = gDate.toLocaleDateString('en-US', { weekday: 'short' });
                         var timeStr = gDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-                        statusHtml = dayStr + ' ' + timeStr;
+                        statusHtml = dayStr + '&nbsp;&nbsp;' + timeStr;
                     }
 
                     html += '<div class="sport-game">';
@@ -752,7 +752,7 @@
                     var nodes = temp.querySelectorAll('.sport-game');
                     var items = [];
                     for (var s = 0; s < nodes.length; s++) {
-                        var sportText = nodes[s].innerText.replace(/\s+/g, ' ').trim();
+                        var sportText = nodes[s].textContent.replace(/\s+/g, ' ').trim();
                         items.push(sportText);
                     }
                     renderTicker('sports-ticker', items);
