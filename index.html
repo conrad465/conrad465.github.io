@@ -292,7 +292,7 @@
             bingImages = results.filter(function(r) { return r && r.url; });
             if (bingImages.length > 0) {
                 rotateBackground();
-                setInterval(rotateBackground, 180000); // every 3 minutes
+                setInterval(rotateBackground, 20000); // every 3 minutes
             }
         });
 
@@ -425,7 +425,7 @@
                     if (code >= 51 && code <= 55) desc = 'Drizzle';
                     if (code >= 61 && code <= 65) desc = 'Rain';
                     if (code >= 71 && code <= 75) desc = 'Snow';
-                    if (code >= 95) desc = 'Thunderstorm';
+                    if (code >= 95) desc = 'T-STORM';
                     document.getElementById('weather-desc').innerText = desc;
                 }
                 if (data.daily) {
