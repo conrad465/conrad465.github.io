@@ -42,13 +42,13 @@
         /* Typography & Headers */
         .header-container {
             display: flex; justify-content: space-between; align-items: flex-end;
-            border-bottom: 2px solid #d1ccc1; padding-bottom: 5px; margin-bottom: 10px;
+            border-bottom: 2px solid #d1ccc1; padding-bottom: 5px; margin-bottom: 15px;
         }
         .header-time { font-size: 36px; font-weight: 600; color: #4a4036; }
 
         h2 { 
             font-size: 22px; 
-            margin-top: 12px; margin-bottom: 8px; 
+            margin-top: 15px; margin-bottom: 8px; 
             color: #4a6b5d; 
             letter-spacing: 0.5px;
             font-weight: 600;
@@ -60,37 +60,35 @@
             width: calc(50% - 5px); 
             background: #f7f5f0; 
             border-radius: 12px; 
-            padding: 10px; box-sizing: border-box;
+            padding: 14px 10px; box-sizing: border-box;
             border-top: 6px solid #555;
             box-shadow: 0 4px 10px -4px rgba(0,0,0,0.06); 
-            text-align: center; /* Center everything inside */
+            text-align: center; 
         }
         .quad-orange { border-top-color: #f97316; } 
         .quad-green { border-top-color: #10b981; }
         
-        .quad-title { font-size: 22px; font-weight: bold; margin-bottom: 6px; color: #7a756d; text-transform: uppercase; letter-spacing: 0.5px;}
+        .quad-title { font-size: 28px; font-weight: bold; margin-bottom: 8px; color: #7a756d; text-transform: uppercase; letter-spacing: 0.5px;}
         .train-row { 
-            display: flex; justify-content: center; /* Center the times since destinations are gone */
+            display: flex; justify-content: center; 
             margin-bottom: 4px; 
-            font-size: 22px; 
-            border-bottom: 1px solid #e1dcd3; padding-bottom: 4px; 
+            font-size: 33px; /* 50% larger */
         }
-        .train-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
         .time-away { font-weight: bold; color: #2b7a59; }
 
         /* Weather Module */
-        .weather-container { background: #f7f5f0; padding: 12px 16px; border-radius: 14px; box-shadow: 0 4px 10px -4px rgba(0,0,0,0.06); display: flex; flex-direction: column; }
-        .weather-main { display: flex; align-items: center; margin-bottom: 4px; }
-        .weather-temp { font-size: 22px; font-weight: 600; color: #2d2a26; } 
-        .weather-desc { font-size: 22px; color: #635f58; margin-left: 15px; font-weight: 500;}
-        .weather-details { font-size: 22px; color: #8a847b; display: flex; gap: 12px; margin-top: 2px; font-weight: 600;}
+        .weather-container { background: #f7f5f0; padding: 16px; border-radius: 14px; box-shadow: 0 4px 10px -4px rgba(0,0,0,0.06); display: flex; flex-direction: column; }
+        .weather-main { display: flex; align-items: center; margin-bottom: 8px; }
+        .weather-temp { font-size: 33px; font-weight: 600; color: #2d2a26; } /* 50% larger */
+        .weather-desc { font-size: 33px; color: #635f58; margin-left: 15px; font-weight: 500;} /* 50% larger */
+        .weather-details { font-size: 33px; color: #8a847b; display: flex; gap: 12px; margin-top: 2px; font-weight: 600;} /* 50% larger */
 
         /* Sports Module */
         .sports-container { background: #f7f5f0; padding: 12px 16px; border-radius: 14px; box-shadow: 0 4px 10px -4px rgba(0,0,0,0.06); }
         .sport-game { display: flex; justify-content: space-between; border-bottom: 1px solid #e1dcd3; padding: 6px 0; font-size: 22px; }
         .sport-game:last-child { border-bottom: none; }
         .team-name { font-weight: 600; color: #2d2a26; }
-        .game-status { color: #635f58; }
+        .game-status { color: #635f58; font-weight: 500;}
         .game-live { color: #c94f3c; font-weight: bold; animation: pulse 2s infinite; }
 
         @keyframes pulse {
@@ -128,17 +126,16 @@
                 <div id="main-clock" class="header-time">--:--</div>
             </div>
             
-            <h2>Subway Departures</h2>
             <div class="subway-grid">
                 <!-- Orange Line Southbound -->
                 <div class="subway-quadrant quad-orange">
-                    <div class="quad-title">Oak Grove</div>
+                    <div class="quad-title">Southbound</div>
                     <div id="orange-inbound"><div class="train-row">Loading...</div></div>
                 </div>
                 
                 <!-- Orange Line Northbound -->
                 <div class="subway-quadrant quad-orange">
-                    <div class="quad-title">Forest Hills</div>
+                    <div class="quad-title">Northbound</div>
                     <div id="orange-outbound"><div class="train-row">Loading...</div></div>
                 </div>
 
@@ -162,7 +159,6 @@
 
         <!-- Right Column: Weather & Sports -->
         <div class="col-right">
-            <h2>Current Weather</h2>
             <div class="weather-container">
                 <div class="weather-main">
                     <div class="weather-temp" id="weather-temp">--°F</div>
@@ -230,37 +226,44 @@
 
                     var direction = p.attributes.direction_id; 
                     var targetTime = p.attributes.departure_time || p.attributes.arrival_time;
-                    var timeStr = p.attributes.status || 'TBD';
                     
                     if (targetTime) {
                         var diffMs = new Date(targetTime).getTime() - new Date().getTime();
                         var diffMins = Math.floor(diffMs / 60000);
                         if (diffMins < -1) continue; 
-                        if (diffMins <= 0) timeStr = p.attributes.status || 'Boarding';
-                        else if (diffMins === 1) timeStr = '1 min';
-                        else timeStr = diffMins + ' min';
+                        
+                        var timeVal = diffMins <= 0 ? 'BRD' : diffMins;
+
+                        if (isOrange && direction === 0) orangeIn.push(timeVal);
+                        if (isOrange && direction === 1) orangeOut.push(timeVal);
+                        if (isGreen && direction === 0) greenIn.push(timeVal);
+                        if (isGreen && direction === 1) greenOut.push(timeVal);
                     }
-
-                    // Destination extraction completely removed for a cleaner look
-                    var htmlStr = '<div class="train-row"><span class="time-away">' + timeStr + '</span></div>';
-
-                    if (isOrange && direction === 0) orangeIn.push(htmlStr);
-                    if (isOrange && direction === 1) orangeOut.push(htmlStr);
-                    if (isGreen && direction === 0) greenIn.push(htmlStr);
-                    if (isGreen && direction === 1) greenOut.push(htmlStr);
                 }
 
-                function renderQuad(id, arr, maxEntries) {
+                function renderQuad(id, arr) {
                     var el = document.getElementById(id);
-                    if (arr.length === 0) el.innerHTML = '<div class="train-row">No trains</div>';
-                    else el.innerHTML = arr.slice(0, maxEntries).join('');
+                    if (arr.length === 0) {
+                        el.innerHTML = '<div class="train-row">No trains</div>';
+                        return;
+                    }
+                    
+                    var sliced = arr.slice(0, 3);
+                    var hasNumber = false;
+                    for(var k=0; k<sliced.length; k++) {
+                        if (sliced[k] !== 'BRD') hasNumber = true;
+                    }
+                    
+                    var displayString = sliced.join(', ');
+                    if (hasNumber) displayString += ' min';
+
+                    el.innerHTML = '<div class="train-row"><span class="time-away">' + displayString + '</span></div>';
                 }
 
-                // Capped all quadrants to exactly 2 departures
-                renderQuad('orange-inbound', orangeIn, 2);
-                renderQuad('orange-outbound', orangeOut, 2);
-                renderQuad('green-inbound', greenIn, 2);
-                renderQuad('green-outbound', greenOut, 2);
+                renderQuad('orange-inbound', orangeIn);
+                renderQuad('orange-outbound', orangeOut);
+                renderQuad('green-inbound', greenIn);
+                renderQuad('green-outbound', greenOut);
             })
             .catch(function(err) { console.error('MBTA Fetch Error:', err); });
         }
@@ -319,7 +322,7 @@
         }
 
 
-        // --- 5. SPORTS (MAX 1 FUTURE GAME PER TEAM) ---
+        // --- 5. SPORTS ---
         function fetchSports() {
             function getFormatDate(offsetDays) {
                 var d = new Date();
@@ -329,7 +332,8 @@
                 var dd = ('0' + d.getDate()).slice(-2);
                 return yy + mm + dd;
             }
-            var dateRange = getFormatDate(-1) + '-' + getFormatDate(7);
+            // Tighter 3-day window: Yesterday through Tomorrow
+            var dateRange = getFormatDate(-1) + '-' + getFormatDate(2);
 
             var urls = [
                 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=' + dateRange,
@@ -351,6 +355,7 @@
 
                 var html = '';
                 var gamesFound = 0;
+                var pastGamesPerTeam = {}; 
                 var futureGamesPerTeam = {}; 
 
                 allGames.sort(function(a,b) { return new Date(a.date).getTime() - new Date(b.date).getTime(); });
@@ -371,29 +376,30 @@
                     var isFinal = (status.name === 'STATUS_FINAL');
                     var isLive = (status.state === 'in');
 
-                    if (!isFinal && !isLive) {
-                        var shouldShowFuture = false;
-                        for (var m = 0; m < matchedTeams.length; m++) {
-                            var tName = matchedTeams[m];
-                            if (!futureGamesPerTeam[tName]) {
-                                shouldShowFuture = true;
-                                futureGamesPerTeam[tName] = true;
-                            }
+                    var shouldShow = false;
+                    for (var m = 0; m < matchedTeams.length; m++) {
+                        var tName = matchedTeams[m];
+                        if (isFinal) {
+                            if (!pastGamesPerTeam[tName]) { pastGamesPerTeam[tName] = true; shouldShow = true; }
+                        } else if (isLive) {
+                            shouldShow = true; // Always show active games
+                        } else {
+                            if (!futureGamesPerTeam[tName]) { futureGamesPerTeam[tName] = true; shouldShow = true; }
                         }
-                        if (!shouldShowFuture) continue;
                     }
+                    if (!shouldShow) continue;
 
                     gamesFound++;
-                    var vsText = awayTeam.team.abbreviation + ' @ ' + homeTeam.team.abbreviation;
+                    var vsText = (awayTeam.team.shortDisplayName || awayTeam.team.name) + ' @ ' + (homeTeam.team.shortDisplayName || homeTeam.team.name);
                     var statusHtml = '';
 
                     if (isFinal) {
-                        statusHtml = 'Final: ' + awayTeam.score + ' - ' + (homeTeam.score || '0');
+                        statusHtml = awayTeam.score + ' - ' + (homeTeam.score || '0');
                     } else if (isLive) {
-                        statusHtml = '<span class="game-live">LIVE: ' + awayTeam.score + ' - ' + homeTeam.score + ' (' + status.detail + ')</span>';
+                        statusHtml = '<span class="game-live">' + awayTeam.score + ' - ' + homeTeam.score + '</span>';
                     } else {
                         var gDate = new Date(game.date);
-                        var dayStr = gDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                        var dayStr = gDate.toLocaleDateString('en-US', { weekday: 'short' });
                         var timeStr = gDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
                         statusHtml = dayStr + ' ' + timeStr;
                     }
