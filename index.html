@@ -81,13 +81,13 @@
             padding: 10px 16px 11px;
             margin-bottom: 14px;
             border-radius: 14px;
-            background: rgba(255,255,255,0.09);
+            background: rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.16);
-            -webkit-backdrop-filter: blur(6px);
-            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(2px);
+            backdrop-filter: blur(2px);
             box-shadow: 0 4px 14px -4px rgba(0,0,0,0.20);
         }
-        .header-time { font-size: 38px; font-weight: 600; color: #ffffff; text-shadow: 0 2px 6px rgba(0,0,0,0.5); }
+        .header-time { font-size: 38px; font-weight: 600; color: #ffffff; text-shadow: 0 2px 6px rgba(0,0,0,0.78); }
 
         /* MBTA Subway Grid (2x2) */
         /* iPad Air 1 (iOS 12 Safari) does not support flexbox "gap", so tiles */
@@ -101,9 +101,9 @@
             gap: 10px; 
         }
         .subway-quadrant { 
-            background: rgba(255,255,255,0.09); 
-            -webkit-backdrop-filter: blur(6px); 
-            backdrop-filter: blur(6px); 
+            background: rgba(255,255,255,0.05); 
+            -webkit-backdrop-filter: blur(2px); 
+            backdrop-filter: blur(2px); 
             border-radius: 12px; 
             padding: 14px 10px; box-sizing: border-box;
             border-top: 6px solid #555;
@@ -113,36 +113,38 @@
         .quad-orange { border-top-color: #f97316; } 
         .quad-green { border-top-color: #10b981; }
         
-        .quad-title { font-size: 28px; font-weight: bold; margin-bottom: 8px; color: rgba(255,255,255,0.85); text-transform: uppercase; letter-spacing: 0.5px; text-shadow: 0 1px 4px rgba(0,0,0,0.4);}
+        .quad-title { font-size: 28px; font-weight: bold; margin-bottom: 8px; color: rgba(255,255,255,0.9); text-transform: uppercase; letter-spacing: 0.5px; text-shadow: 0 2px 5px rgba(0,0,0,0.78);}
         .train-row { 
             display: flex; justify-content: center; 
             margin-bottom: 4px; 
             font-size: 33px; /* 50% larger */
         }
         .time-away { font-weight: bold; color: #6fe3a5; text-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+        .quad-orange .time-away {color: #f97316;}
+        .quad-green .time-away {color: #6fe3a5;}
 
         .header-weather { 
             display: flex; align-items: baseline;
-            font-size: 20px; 
+            font-size: 24px; 
             white-space: nowrap;
         }
         .header-weather > span { margin-left: 10px; }
         .header-weather > span:first-child { margin-left: 0; }
-        .hw-temp { font-size: 28px; font-weight: 600; color: #ffffff; text-shadow: 0 2px 6px rgba(0,0,0,0.5); }
-        .hw-desc { font-size: 28px; color: #f3f1ec; font-weight: 500; text-shadow: 0 2px 6px rgba(0,0,0,0.5); }
-        .hw-details { font-size: 22px; color: rgba(255,255,255,0.8); font-weight: 500; text-shadow: 0 2px 6px rgba(0,0,0,0.5); }
+        .hw-temp { font-size: 38px; font-weight: 600; color: #ffffff; text-shadow: 0 2px 6px rgba(0,0,0,0.78); }
+        .hw-desc { font-size: 30px; color: #f3f1ec; font-weight: 500; text-shadow: 0 2px 6px rgba(0,0,0,0.78); }
+        .hw-details { font-size: 30px; color: rgba(255,255,255,0.8); font-weight: 500; text-shadow: 0 2px 6px rgba(0,0,0,0.5); }
 
         /* News Module */
-        .news-container { background: rgba(255,255,255,0.09); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); padding: 8px 14px; border-radius: 14px; box-shadow: 0 4px 14px -4px rgba(0,0,0,0.25); }
-        .news-item { border-bottom: 1px solid rgba(255,255,255,0.2); padding: 6px 0; font-size: 18px; color: #ffffff; text-shadow: 0 1px 4px rgba(0,0,0,0.4); line-height: 1.3; }
+        .news-container { background: rgba(255,255,255,0.05); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); padding: 8px 14px; border-radius: 14px; box-shadow: 0 4px 14px -4px rgba(0,0,0,0.25); }
+        .news-item { border-bottom: 1px solid rgba(255,255,255,0.18); padding: 6px 8px; font-size: 16px; color: #ffffff; text-shadow: 0 2px 5px rgba(0,0,0,0.78); line-height: 1.3; }
         .news-item:last-child { border-bottom: none; }
         .news-rank { font-weight: 700; color: #6fe3a5; margin-right: 6px; }
 
         /* Sports Module */
-        .sports-container { background: rgba(255,255,255,0.09); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); padding: 8px 14px; border-radius: 14px; box-shadow: 0 4px 14px -4px rgba(0,0,0,0.25); margin-top: 8px; }
-        .sport-game { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.2); padding: 4px 0; font-size: 20px; }
+        .sports-container { background: rgba(255,255,255,0.05); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); padding: 8px 14px; border-radius: 14px; box-shadow: 0 4px 14px -4px rgba(0,0,0,0.25); margin-top: 8px; }
+        .sport-game { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.18); padding: 4px 8px; font-size: 16px; }
         .sport-game:last-child { border-bottom: none; }
-        .team-name { font-weight: 600; color: #ffffff; text-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+        .team-name { font-weight: 600; color: #ffffff; text-shadow: 0 2px 5px rgba(0,0,0,0.78); }
         .game-status { color: rgba(255,255,255,0.8); font-weight: 500;}
         .game-live { color: #ff8a75; font-weight: bold; animation: pulse 2s infinite; }
 
@@ -161,7 +163,7 @@
             border-left: 5px solid #d9534f; 
             padding: 8px 12px;
             margin-bottom: 6px; 
-            font-size: 14px; 
+            font-size: 16px; 
             line-height: 1.4; 
             border-radius: 8px; 
             color: #ffffff;
@@ -173,6 +175,21 @@
             border-left-color: #2b7a59; 
             color: #ffffff;
         }
+        /* Periodic photo-only mode: temporarily remove fixed UI so the display can rest. */
+        body.photo-only .dashboard {
+            opacity: 0;
+            pointer-events: none;
+        }
+        body.photo-only .bg-scrim {
+            opacity: 0.04;
+        }
+        body.photo-only .bg-caption {
+            opacity: 1;
+        }
+        .dashboard {
+            transition: opacity 1.2s ease-in-out;
+        }
+
     </style>
 </head>
 <body>
@@ -292,7 +309,7 @@
             bingImages = results.filter(function(r) { return r && r.url; });
             if (bingImages.length > 0) {
                 rotateBackground();
-                setInterval(rotateBackground, 20000); // every 3 minutes
+                setInterval(rotateBackground, 60000); // every 3 minutes
             }
         });
 
@@ -425,7 +442,7 @@
                     if (code >= 51 && code <= 55) desc = 'Drizzle';
                     if (code >= 61 && code <= 65) desc = 'Rain';
                     if (code >= 71 && code <= 75) desc = 'Snow';
-                    if (code >= 95) desc = 'T-STORM';
+                    if (code >= 95) desc = 'Thunderstorm';
                     document.getElementById('weather-desc').innerText = desc;
                 }
                 if (data.daily) {
@@ -556,7 +573,7 @@
                 var top3 = json.items.slice(0, 3);
                 var html = '';
                 for (var i = 0; i < top3.length; i++) {
-                    html += '<div class="news-item"><span class="news-rank">' + (i + 1) + '.</span>' + top3[i].title + '</div>';
+                    html += '<div class="news-item">' + top3[i].title + '</div>';
                 }
                 container.innerHTML = html;
             })
@@ -566,6 +583,43 @@
             });
         }
 
+
+        // --- 6. PHOTO-ONLY REST PERIOD / TOUCH TO RETURN ---
+        // Every 2 hours, hide the static dashboard for 45 seconds. A tap immediately
+        // restores the dashboard, which is convenient on an always-on iPad display.
+        var PHOTO_ONLY_AFTER_MS = 2 * 60 * 60 * 1000;
+        var PHOTO_ONLY_DURATION_MS = 45 * 1000;
+        var photoOnlyTimer = null;
+        var photoOnlyExitTimer = null;
+
+        function exitPhotoOnlyMode() {
+            if (!document.body.classList.contains('photo-only')) return;
+            document.body.classList.remove('photo-only');
+            if (photoOnlyExitTimer) {
+                clearTimeout(photoOnlyExitTimer);
+                photoOnlyExitTimer = null;
+            }
+            schedulePhotoOnlyMode();
+        }
+
+        function enterPhotoOnlyMode() {
+            document.body.classList.add('photo-only');
+            photoOnlyExitTimer = setTimeout(exitPhotoOnlyMode, PHOTO_ONLY_DURATION_MS);
+        }
+
+        function schedulePhotoOnlyMode() {
+            if (photoOnlyTimer) clearTimeout(photoOnlyTimer);
+            photoOnlyTimer = setTimeout(enterPhotoOnlyMode, PHOTO_ONLY_AFTER_MS);
+        }
+
+        // touchend is used for iPad Safari; click is retained as a desktop fallback.
+        document.addEventListener('touchend', function() {
+            exitPhotoOnlyMode();
+        }, false);
+        document.addEventListener('click', function() {
+            exitPhotoOnlyMode();
+        }, false);
+        schedulePhotoOnlyMode();
 
         // --- 6. TIMERS & INITIALIZATION ---
         function updateFastData() {
