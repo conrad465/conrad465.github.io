@@ -98,24 +98,30 @@
         .subway-grid { 
             display: -ms-grid;
             display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            grid-gap: 10px; 
-            gap: 10px; 
+            grid-template-columns: max-content max-content;
+            grid-auto-rows: max-content;
+            grid-gap: 7px;
+            gap: 7px;
+            justify-content: center; 
+            align-items: stretch;
         }
         .subway-quadrant { 
             background: rgba(255,255,255,0.1); 
             -webkit-backdrop-filter: blur(7px); 
             backdrop-filter: blur(7px); 
             border-radius: 12px; 
-            padding: 8px 6px; box-sizing: border-box;
+            padding: 5.5px 2.2px; box-sizing: border-box;
             border-top: 6px solid #555;
             box-shadow: 0 4px 14px -4px rgba(0,0,0,0.25); 
-            text-align: center; 
+            text-align: center;
+            width: 100%;
+            max-width: none;
+            min-width: 0;
         }
         .quad-orange { border-top-color: #f97316; } 
         .quad-green { border-top-color: #10b981; }
         
-        .quad-title { font-size: 45px; font-weight: bold; margin-bottom: 1px; color: rgba(255,255,255,0.9); text-transform: uppercase; letter-spacing: 0.5px; text-shadow: 0 2px 5px rgba(0,0,0,0.78);}
+        .quad-title { font-size: 45px; font-weight: bold; margin-bottom: 0; color: rgba(255,255,255,0.9); text-transform: uppercase; letter-spacing: 0.5px; text-shadow: 0 2px 5px rgba(0,0,0,0.78);}
         .train-row { 
             display: flex; justify-content: center; 
             margin-bottom: 4px; 
@@ -130,7 +136,7 @@
             font-size: 24px; 
             white-space: nowrap;
         }
-        .header-weather > span { margin-left: 7px; }
+        .header-weather > span { margin-left: 5px; }
         .header-weather > span:first-child { margin-left: 0; }
 
         /* Compact scrolling headlines beneath the clock/weather header */
@@ -140,11 +146,11 @@
             display: flex;
             flex-direction: column;
             gap: 5px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         .ticker {
             display: grid;
-            grid-template-columns: 118px minmax(0, 1fr);
+            grid-template-columns: 112px minmax(0, 1fr);
             align-items: stretch;
             overflow: hidden;
             width: 100%;
@@ -152,70 +158,80 @@
             padding: 0;
             box-sizing: border-box;
             border-radius: 8px;
-            background: rgba(255,255,255,0.035);
+            background: rgba(255,255,255,0.1);
             border: 1px solid rgba(255,255,255,0.10);
             -webkit-backdrop-filter: blur(7px);
             backdrop-filter: blur(7px);
             white-space: nowrap;
+            position: relative;
         }
         .ticker-label {
             display: flex;
             align-items: center;
             justify-content: flex-start;
-            width: 118px;
+            width: 112px;
             box-sizing: border-box;
             padding: 0 10px;
             font-size: 20px;
             font-weight: 800;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.4px;
             text-transform: uppercase;
-            background: rgba(42,42,40,0.88);
-            border-right: 1px solid rgba(255,255,255,0.10);
+            background: rgba(25,25,23,0.96);
+            border-right: 1px solid rgba(255,255,255,0.12);
             -webkit-backdrop-filter: blur(7px);
             backdrop-filter: blur(7px);
             text-shadow: 0 2px 6px rgba(0,0,0,0.9);
+            position: relative;
+            z-index: 20;
         }
         .ticker-track {
             min-width: 0;
             overflow: hidden;
-            display: flex;
-            align-items: center;
-            padding: 3px 10px;
+            position: relative;
+            z-index: 1;
+            display: block;
+            padding: 2px 10px;
             box-sizing: border-box;
         }
         .ticker-track-inner {
             display: inline-flex;
             align-items: center;
-            gap: 42px;
+            width: max-content;
             min-width: max-content;
-            animation: tickerScroll 42s linear infinite;
+            transform: translate3d(0,0,0);
             will-change: transform;
         }
+        .ticker-segment {
+            display: inline-flex;
+            align-items: center;
+            flex: 0 0 auto;
+            gap: 42px;
+            padding-right: 42px;
+        }
         .ticker-item {
+            display: inline-block;
+            flex: 0 0 auto;
             font-size: 24px;
             line-height: 1.15;
             color: #ffffff;
             text-shadow: 0 3px 8px rgba(0,0,0,0.95);
+            white-space: nowrap;
         }
         .ticker-news .ticker-label { color: #ffffff; }
         .ticker-sports .ticker-label { color: #ff8a75; }
-        @keyframes tickerScroll {
-            from { transform: translateX(0); }
-            to { transform: translateX(-50%); }
-        }
 
         .hw-temp { font-size: 38px; font-weight: 600; color: #ffffff; text-shadow: 0 2px 6px rgba(0,0,0,0.78); }
         .hw-desc { font-size: 30px; color: #f3f1ec; font-weight: 500; text-shadow: 0 2px 6px rgba(0,0,0,0.78); }
         .hw-details { font-size: 30px; color: rgba(255,255,255,0.9); font-weight: 500; text-shadow: 0 2px 6px rgba(0,0,0,0.78); }
 
         /* News Module */
-        .news-container { background: rgba(255,255,255,0.1); -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px); padding: 8px 14px; border-radius: 14px; box-shadow: 0 4px 14px -4px rgba(0,0,0,0.25); }
+        .news-container { background: rgba(255,255,255,0.05); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); padding: 8px 14px; border-radius: 14px; box-shadow: 0 4px 14px -4px rgba(0,0,0,0.25); }
         .news-item { border-bottom: 1px solid rgba(255,255,255,0.18); padding: 6px 8px; font-size: 24px; color: #ffffff; text-shadow: 0 3px 7px rgba(0,0,0,0.88); line-height: 1.25; }
         .news-item:last-child { border-bottom: none; }
         .news-rank { font-weight: 700; color: #6fe3a5; margin-right: 6px; text-shadow: 0 2px 5px rgba(0,0,0,0.78); }
 
         /* Sports Module */
-        .sports-container { background: rgba(255,255,255,0.1); -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px); padding: 8px 14px; border-radius: 14px; box-shadow: 0 4px 14px -4px rgba(0,0,0,0.25); margin-top: 8px; }
+        .sports-container { background: rgba(255,255,255,0.05); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); padding: 8px 14px; border-radius: 14px; box-shadow: 0 4px 14px -4px rgba(0,0,0,0.25); margin-top: 8px; }
         .sport-game { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.18); padding: 4px 8px; font-size: 24px; }
         .sport-game:last-child { border-bottom: none; }
         .team-name { font-weight: 600; color: #ffffff; text-shadow: 0 3px 7px rgba(0,0,0,0.88); }
@@ -408,6 +424,42 @@
 
 
         // --- 2. MBTA SUBWAY LOGIC ---
+        function syncSubwayTileSizes() {
+            var tiles = document.querySelectorAll('.subway-quadrant');
+            if (!tiles.length) return;
+
+            // Clear previous sizing before measuring the natural content size.
+            for (var i = 0; i < tiles.length; i++) {
+                tiles[i].style.width = 'max-content';
+                tiles[i].style.height = 'auto';
+            }
+
+            var maxWidth = 0;
+            var maxHeight = 0;
+            for (var j = 0; j < tiles.length; j++) {
+                var rect = tiles[j].getBoundingClientRect();
+                if (rect.width > maxWidth) maxWidth = rect.width;
+                if (rect.height > maxHeight) maxHeight = rect.height;
+            }
+
+            maxWidth = Math.ceil(maxWidth);
+            maxHeight = Math.ceil(maxHeight);
+
+            // Force the GRID COLUMNS themselves to the same measured width.
+            // This prevents Safari/iPad from re-expanding each column based on
+            // its own intrinsic content, which was causing visibly different
+            // tile lengths.
+            var grid = document.querySelector('.subway-grid');
+            if (grid) {
+                grid.style.gridTemplateColumns = maxWidth + 'px ' + maxWidth + 'px';
+            }
+
+            for (var k = 0; k < tiles.length; k++) {
+                tiles[k].style.width = maxWidth + 'px';
+                tiles[k].style.height = maxHeight + 'px';
+            }
+        }
+
         function fetchSubway() {
             var url = 'https://api-v3.mbta.com/predictions?filter[stop]=place-north&include=route,trip';
             
@@ -540,6 +592,70 @@
         }
 
 
+        // --- TICKER RENDERING (iPad-safe) ---
+        var tickerAnimators = {};
+
+        function renderTicker(id, items) {
+            var container = document.getElementById(id);
+            if (!container) return;
+            if (!items || items.length === 0) items = ['No information available.'];
+
+            var segmentHtml = '';
+            for (var i = 0; i < items.length; i++) {
+                segmentHtml += '<span class="ticker-item">' + items[i] + '</span>';
+            }
+
+            container.innerHTML = '<div class="ticker-segment">' + segmentHtml + '</div>' +
+                                  '<div class="ticker-segment">' + segmentHtml + '</div>';
+
+            setupTickerAnimation(id);
+        }
+
+        function setupTickerAnimation(id) {
+            if (tickerAnimators[id]) {
+                tickerAnimators[id].stop = true;
+            }
+
+            var container = document.getElementById(id);
+            if (!container) return;
+            var track = container.parentElement;
+            var segments = container.querySelectorAll('.ticker-segment');
+            if (!segments || segments.length < 2) return;
+
+            // Let Safari finish layout before measuring.
+            window.setTimeout(function() {
+                var first = segments[0];
+                var distance = first.getBoundingClientRect().width;
+                if (!distance || distance <= track.clientWidth) {
+                    container.style.transform = 'translate3d(0,0,0)';
+                    return;
+                }
+
+                var state = { stop: false };
+                tickerAnimators[id] = state;
+                var position = 0;
+                var last = Date.now();
+                var speed = 42; // pixels per second; smooth but clearly readable
+
+                function step() {
+                    if (state.stop) return;
+                    var now = Date.now();
+                    var elapsed = Math.min(now - last, 80);
+                    last = now;
+                    position -= speed * elapsed / 1000;
+                    if (position <= -distance) position += distance;
+                    container.style.transform = 'translate3d(' + position.toFixed(2) + 'px,0,0)';
+                    window.requestAnimationFrame(step);
+                }
+                window.requestAnimationFrame(step);
+            }, 60);
+        }
+
+        window.addEventListener('resize', function() {
+            setupTickerAnimation('news-ticker');
+            setupTickerAnimation('sports-ticker');
+        });
+
         // --- 5. SPORTS ---
         function fetchSports() {
             function getFormatDate(offsetDays) {
@@ -628,21 +744,18 @@
                     html += '</div>';
                 }
 
-                var container = document.getElementById('sports-ticker');
                 if (gamesFound === 0) {
-                    container.innerHTML = '<span class="ticker-item">No recent or upcoming games found.</span>';
+                    renderTicker('sports-ticker', ['No recent or upcoming games found.']);
                 } else {
                     var temp = document.createElement('div');
                     temp.innerHTML = html;
                     var nodes = temp.querySelectorAll('.sport-game');
-                    var tickerHtml = '';
-                    for (var r = 0; r < 2; r++) {
-                        for (var s = 0; s < nodes.length; s++) {
-                            var sportText = nodes[s].innerText.replace(/\s+/g, ' ').trim();
-                            tickerHtml += '<span class="ticker-item">' + sportText + '</span>';
-                        }
+                    var items = [];
+                    for (var s = 0; s < nodes.length; s++) {
+                        var sportText = nodes[s].innerText.replace(/\s+/g, ' ').trim();
+                        items.push(sportText);
                     }
-                    container.innerHTML = tickerHtml;
+                    renderTicker('sports-ticker', items);
                 }
             });
         }
@@ -658,20 +771,17 @@
             fetch(url, { cache: 'no-store' })
             .then(function(res) { return res.json(); })
             .then(function(json) {
-                var container = document.getElementById('news-ticker');
                 if (json.status !== 'ok' || !json.items || json.items.length === 0) {
-                    container.innerHTML = '<span class="ticker-item">No headlines available.</span>';
+                    renderTicker('news-ticker', ['No headlines available.']);
                     return;
                 }
 
                 var top3 = json.items.slice(0, 3);
-                var tickerHtml = '';
-                for (var r = 0; r < 2; r++) {
-                    for (var i = 0; i < top3.length; i++) {
-                        tickerHtml += '<span class="ticker-item">' + top3[i].title + '</span>';
-                    }
+                var items = [];
+                for (var i = 0; i < top3.length; i++) {
+                    items.push(top3[i].title);
                 }
-                container.innerHTML = tickerHtml;
+                renderTicker('news-ticker', items);
             });
         }
 
