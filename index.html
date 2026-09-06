@@ -42,22 +42,30 @@
         /* Typography & Headers */
         .header-container {
             display: flex; justify-content: space-between; align-items: flex-end;
-            border-bottom: 2px solid #d1ccc1; padding-bottom: 5px; margin-bottom: 15px;
+            border-bottom: 2px solid #d1ccc1; padding-bottom: 5px; margin-bottom: 8px;
         }
         .header-time { font-size: 36px; font-weight: 600; color: #4a4036; }
 
         h2 { 
-            font-size: 22px; 
-            margin-top: 15px; margin-bottom: 8px; 
+            font-size: 16px; 
+            margin-top: 8px; margin-bottom: 4px; 
             color: #4a6b5d; 
             letter-spacing: 0.5px;
             font-weight: 600;
         }
 
         /* MBTA Subway Grid (2x2) */
-        .subway-grid { display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start;}
+        /* iPad Air 1 (iOS 12 Safari) does not support flexbox "gap", so tiles */
+        /* touched with no spacing. CSS grid "gap" has been supported since */
+        /* Safari 10.1, so it renders correctly on this device. */
+        .subway-grid { 
+            display: -ms-grid;
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            grid-gap: 10px; 
+            gap: 10px; 
+        }
         .subway-quadrant { 
-            width: calc(50% - 5px); 
             background: #f7f5f0; 
             border-radius: 12px; 
             padding: 14px 10px; box-sizing: border-box;
@@ -84,8 +92,8 @@
         .weather-details { font-size: 33px; color: #8a847b; display: flex; gap: 12px; margin-top: 2px; font-weight: 600;} /* 50% larger */
 
         /* Sports Module */
-        .sports-container { background: #f7f5f0; padding: 12px 16px; border-radius: 14px; box-shadow: 0 4px 10px -4px rgba(0,0,0,0.06); }
-        .sport-game { display: flex; justify-content: space-between; border-bottom: 1px solid #e1dcd3; padding: 6px 0; font-size: 22px; }
+        .sports-container { background: #f7f5f0; padding: 8px 14px; border-radius: 14px; box-shadow: 0 4px 10px -4px rgba(0,0,0,0.06); }
+        .sport-game { display: flex; justify-content: space-between; border-bottom: 1px solid #e1dcd3; padding: 4px 0; font-size: 20px; }
         .sport-game:last-child { border-bottom: none; }
         .team-name { font-weight: 600; color: #2d2a26; }
         .game-status { color: #635f58; font-weight: 500;}
