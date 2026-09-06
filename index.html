@@ -80,13 +80,13 @@
         .header-container {
             width: 100%; box-sizing: border-box;
             display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 16px 11px;
-            margin-bottom: 14px;
+            padding: 6px 10px 7px;
+            margin-bottom: 5px;
             border-radius: 14px;
-            background: rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.1);
             border: 1px solid rgba(255,255,255,0.16);
-            -webkit-backdrop-filter: blur(4px);
-            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(7px);
+            backdrop-filter: blur(7px);
             box-shadow: 0 4px 14px -4px rgba(0,0,0,0.20);
         }
         .header-time { font-size: 38px; font-weight: 600; color: #ffffff; text-shadow: 0 2px 6px rgba(0,0,0,0.78); }
@@ -103,11 +103,11 @@
             gap: 10px; 
         }
         .subway-quadrant { 
-            background: rgba(255,255,255,0.05); 
-            -webkit-backdrop-filter: blur(4px); 
-            backdrop-filter: blur(4px); 
+            background: rgba(255,255,255,0.1); 
+            -webkit-backdrop-filter: blur(7px); 
+            backdrop-filter: blur(7px); 
             border-radius: 12px; 
-            padding: 14px 10px; box-sizing: border-box;
+            padding: 8px 6px; box-sizing: border-box;
             border-top: 6px solid #555;
             box-shadow: 0 4px 14px -4px rgba(0,0,0,0.25); 
             text-align: center; 
@@ -115,11 +115,11 @@
         .quad-orange { border-top-color: #f97316; } 
         .quad-green { border-top-color: #10b981; }
         
-        .quad-title { font-size: 28px; font-weight: bold; margin-bottom: 8px; color: rgba(255,255,255,0.9); text-transform: uppercase; letter-spacing: 0.5px; text-shadow: 0 2px 5px rgba(0,0,0,0.78);}
+        .quad-title { font-size: 45px; font-weight: bold; margin-bottom: 1px; color: rgba(255,255,255,0.9); text-transform: uppercase; letter-spacing: 0.5px; text-shadow: 0 2px 5px rgba(0,0,0,0.78);}
         .train-row { 
             display: flex; justify-content: center; 
             margin-bottom: 4px; 
-            font-size: 33px; /* 50% larger */
+            font-size: 45px; /* 15% smaller than the previous 53px size */
         }
         .time-away { font-weight: bold; color: #6fe3a5; text-shadow: 0 2px 5px rgba(0,0,0,0.78); }
         .quad-orange .time-away {color: #f97316;}
@@ -130,20 +130,92 @@
             font-size: 24px; 
             white-space: nowrap;
         }
-        .header-weather > span { margin-left: 10px; }
+        .header-weather > span { margin-left: 7px; }
         .header-weather > span:first-child { margin-left: 0; }
+
+        /* Compact scrolling headlines beneath the clock/weather header */
+        .ticker-row {
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .ticker {
+            display: grid;
+            grid-template-columns: 118px minmax(0, 1fr);
+            align-items: stretch;
+            overflow: hidden;
+            width: 100%;
+            min-height: 29px;
+            padding: 0;
+            box-sizing: border-box;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.035);
+            border: 1px solid rgba(255,255,255,0.10);
+            -webkit-backdrop-filter: blur(7px);
+            backdrop-filter: blur(7px);
+            white-space: nowrap;
+        }
+        .ticker-label {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            width: 118px;
+            box-sizing: border-box;
+            padding: 0 10px;
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            background: rgba(42,42,40,0.88);
+            border-right: 1px solid rgba(255,255,255,0.10);
+            -webkit-backdrop-filter: blur(7px);
+            backdrop-filter: blur(7px);
+            text-shadow: 0 2px 6px rgba(0,0,0,0.9);
+        }
+        .ticker-track {
+            min-width: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            padding: 3px 10px;
+            box-sizing: border-box;
+        }
+        .ticker-track-inner {
+            display: inline-flex;
+            align-items: center;
+            gap: 42px;
+            min-width: max-content;
+            animation: tickerScroll 42s linear infinite;
+            will-change: transform;
+        }
+        .ticker-item {
+            font-size: 24px;
+            line-height: 1.15;
+            color: #ffffff;
+            text-shadow: 0 3px 8px rgba(0,0,0,0.95);
+        }
+        .ticker-news .ticker-label { color: #ffffff; }
+        .ticker-sports .ticker-label { color: #ff8a75; }
+        @keyframes tickerScroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
         .hw-temp { font-size: 38px; font-weight: 600; color: #ffffff; text-shadow: 0 2px 6px rgba(0,0,0,0.78); }
         .hw-desc { font-size: 30px; color: #f3f1ec; font-weight: 500; text-shadow: 0 2px 6px rgba(0,0,0,0.78); }
         .hw-details { font-size: 30px; color: rgba(255,255,255,0.9); font-weight: 500; text-shadow: 0 2px 6px rgba(0,0,0,0.78); }
 
         /* News Module */
-        .news-container { background: rgba(255,255,255,0.05); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); padding: 8px 14px; border-radius: 14px; box-shadow: 0 4px 14px -4px rgba(0,0,0,0.25); }
+        .news-container { background: rgba(255,255,255,0.1); -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px); padding: 8px 14px; border-radius: 14px; box-shadow: 0 4px 14px -4px rgba(0,0,0,0.25); }
         .news-item { border-bottom: 1px solid rgba(255,255,255,0.18); padding: 6px 8px; font-size: 24px; color: #ffffff; text-shadow: 0 3px 7px rgba(0,0,0,0.88); line-height: 1.25; }
         .news-item:last-child { border-bottom: none; }
         .news-rank { font-weight: 700; color: #6fe3a5; margin-right: 6px; text-shadow: 0 2px 5px rgba(0,0,0,0.78); }
 
         /* Sports Module */
-        .sports-container { background: rgba(255,255,255,0.05); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); padding: 8px 14px; border-radius: 14px; box-shadow: 0 4px 14px -4px rgba(0,0,0,0.25); margin-top: 8px; }
+        .sports-container { background: rgba(255,255,255,0.1); -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px); padding: 8px 14px; border-radius: 14px; box-shadow: 0 4px 14px -4px rgba(0,0,0,0.25); margin-top: 8px; }
         .sport-game { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.18); padding: 4px 8px; font-size: 24px; }
         .sport-game:last-child { border-bottom: none; }
         .team-name { font-weight: 600; color: #ffffff; text-shadow: 0 3px 7px rgba(0,0,0,0.88); }
@@ -211,9 +283,28 @@
             </div>
         </div>
 
+        <div class="ticker-row">
+            <div class="ticker ticker-news">
+                <span class="ticker-label">NEWS</span>
+                <div class="ticker-track">
+                    <div class="ticker-track-inner" id="news-ticker">
+                        <span class="ticker-item">Loading Boston headlines...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="ticker ticker-sports">
+                <span class="ticker-label">SPORTS</span>
+                <div class="ticker-track">
+                    <div class="ticker-track-inner" id="sports-ticker">
+                        <span class="ticker-item">Loading sports data...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="content-row">
-            <!-- Left Column: Subway & Alerts -->
-            <div class="col-left">
+            <!-- Main Area: Subway & Alerts -->
+            <div class="col-left" style="width:100%; padding:0 10px 12px 10px;">
                 <div class="subway-grid">
                     <!-- Orange Line Southbound -->
                     <div class="subway-quadrant quad-orange">
@@ -245,16 +336,6 @@
                 </div>
             </div>
 
-            <!-- Right Column: News & Sports -->
-            <div class="col-right">
-                <div class="news-container" id="news-container">
-                    <div class="news-item">Loading Boston headlines...</div>
-                </div>
-
-                <div class="sports-container" id="sports-container">
-                    <div class="sport-game">Loading sports data...</div>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -547,11 +628,21 @@
                     html += '</div>';
                 }
 
-                var container = document.getElementById('sports-container');
+                var container = document.getElementById('sports-ticker');
                 if (gamesFound === 0) {
-                    container.innerHTML = '<div class="sport-game">No recent or upcoming games found.</div>';
+                    container.innerHTML = '<span class="ticker-item">No recent or upcoming games found.</span>';
                 } else {
-                    container.innerHTML = html;
+                    var temp = document.createElement('div');
+                    temp.innerHTML = html;
+                    var nodes = temp.querySelectorAll('.sport-game');
+                    var tickerHtml = '';
+                    for (var r = 0; r < 2; r++) {
+                        for (var s = 0; s < nodes.length; s++) {
+                            var sportText = nodes[s].innerText.replace(/\s+/g, ' ').trim();
+                            tickerHtml += '<span class="ticker-item">' + sportText + '</span>';
+                        }
+                    }
+                    container.innerHTML = tickerHtml;
                 }
             });
         }
@@ -567,21 +658,20 @@
             fetch(url, { cache: 'no-store' })
             .then(function(res) { return res.json(); })
             .then(function(json) {
-                var container = document.getElementById('news-container');
+                var container = document.getElementById('news-ticker');
                 if (json.status !== 'ok' || !json.items || json.items.length === 0) {
-                    container.innerHTML = '<div class="news-item">No headlines available.</div>';
+                    container.innerHTML = '<span class="ticker-item">No headlines available.</span>';
                     return;
                 }
+
                 var top3 = json.items.slice(0, 3);
-                var html = '';
-                for (var i = 0; i < top3.length; i++) {
-                    html += '<div class="news-item">' + top3[i].title + '</div>';
+                var tickerHtml = '';
+                for (var r = 0; r < 2; r++) {
+                    for (var i = 0; i < top3.length; i++) {
+                        tickerHtml += '<span class="ticker-item">' + top3[i].title + '</span>';
+                    }
                 }
-                container.innerHTML = html;
-            })
-            .catch(function(err) {
-                console.error('News fetch error:', err);
-                document.getElementById('news-container').innerHTML = '<div class="news-item">Headlines unavailable.</div>';
+                container.innerHTML = tickerHtml;
             });
         }
 
@@ -624,6 +714,7 @@
         schedulePhotoOnlyMode();
 
         // --- 6. TIMERS & INITIALIZATION ---
+        // Weather and news refresh twice per day (every 12 hours).
         function updateFastData() {
             fetchSubway();
             fetchAlerts();
@@ -639,7 +730,7 @@
         updateSlowData();
 
         setInterval(updateFastData, 60000);
-        setInterval(updateSlowData, 3600000);
+        setInterval(updateSlowData, 12 * 60 * 60 * 1000);
 
     </script>
 </body>
