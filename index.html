@@ -1,102 +1,482 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-	<title>Conrad Mitchell</title>
-	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
-	<link rel="stylesheet" type="text/css" href="static/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Boston North Station Dashboard</title>
+    <style>
+        /* Modern Blue & Green "Smart Home" Theme */
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background: #0f172a; /* Deep dark slate/navy blue */
+            color: #f1f5f9; /* Crisp off-white */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            overflow: hidden; 
+        }
+        
+        /* Pixel Shifting Dashboard Container */
+        .dashboard { 
+            display: flex; flex-direction: row; 
+            width: 96vw; height: 96vh; margin: 2vh 2vw;
+            animation: pixelShift 300s infinite alternate ease-in-out;
+        }
+
+        @keyframes pixelShift {
+            0%   { transform: translate(0, 0); }
+            25%  { transform: translate(-1.5vw, -1.5vh); }
+            50%  { transform: translate(1.5vw, -1vh); }
+            75%  { transform: translate(1vw, 1.5vh); }
+            100% { transform: translate(-1vh, 1vw); }
+        }
+
+        /* Two-Column Layout */
+        .col-left { 
+            width: 55%; padding: 25px; box-sizing: border-box; 
+            border-right: 2px solid #1e293b; /* Subtle column divider */
+            display: flex; flex-direction: column; overflow-y: hidden; 
+        }
+        .col-right { 
+            width: 45%; padding: 25px; box-sizing: border-box; 
+            display: flex; flex-direction: column; overflow-y: hidden; 
+        }
+
+        /* Typography & Headers */
+        h1, h2 { 
+            margin-top: 0; 
+            font-weight: 600; 
+        }
+        h1 { 
+            font-size: 28px; 
+            border-bottom: 2px solid #1e293b; 
+            padding-bottom: 15px; display: flex; justify-content: space-between; 
+            margin-bottom: 20px;
+            color: #7dd3fc; /* Sky blue */
+        }
+        h2 { 
+            font-size: 20px; 
+            margin-top: 25px; margin-bottom: 12px; 
+            color: #34d399; /* Emerald green */
+            letter-spacing: 0.5px;
+        }
+
+        /* MBTA Subway Grid (2x2) */
+        .subway-grid { display: flex; flex-wrap: wrap; gap: 16px; flex-grow: 1; align-content: flex-start;}
+        .subway-quadrant { 
+            width: calc(50% - 8px); 
+            background: #1e293b; /* Slate blue card */
+            border-radius: 18px; /* Heavily rounded corners */
+            padding: 16px; box-sizing: border-box;
+            border-top: 6px solid #555;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);
+        }
+        /* Kept MBTA colors for rapid visual recognition */
+        .quad-orange { border-top-color: #f97316; } 
+        .quad-green { border-top-color: #10b981; }
+        
+        .quad-title { font-size: 14px; font-weight: bold; margin-bottom: 12px; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.5px;}
+        .train-row { 
+            display: flex; justify-content: space-between; margin-bottom: 10px; 
+            font-size: 16px; border-bottom: 1px solid #334155; padding-bottom: 8px; 
+        }
+        .train-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .time-away { font-weight: bold; color: #6ee7b7; /* Mint green */ }
+
+        /* Weather Module */
+        .weather-container { background: #1e293b; padding: 18px; border-radius: 18px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
+        .weather-main { display: flex; align-items: center; margin-bottom: 5px; }
+        .weather-temp { font-size: 44px; font-weight: 300; color: #e0f2fe; }
+        .weather-desc { font-size: 18px; color: #94a3b8; margin-left: 20px; font-weight: 500;}
+        .weather-details { font-size: 15px; color: #64748b; display: flex; gap: 15px; margin-top: 5px; font-weight: 600;}
+
+        /* Sports Module */
+        .sports-container { background: #1e293b; padding: 18px; border-radius: 18px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); }
+        .sport-game { display: flex; justify-content: space-between; border-bottom: 1px solid #334155; padding: 10px 0; font-size: 15px; }
+        .sport-game:last-child { border-bottom: none; }
+        .team-name { font-weight: 600; color: #f1f5f9; }
+        .game-status { color: #94a3b8; }
+        .game-live { color: #38bdf8; /* Bright blue for live games */ font-weight: bold; animation: pulse 2s infinite; }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        /* History Fact */
+        .history-box { 
+            color: #cbd5e1; font-size: 16px; line-height: 1.5; 
+            background: #1e293b; padding: 18px; border-radius: 18px; 
+            border-left: 6px solid #0ea5e9; /* Deep sky blue accent */
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);
+        }
+        .history-year { font-weight: bold; color: #38bdf8; margin-right: 5px; }
+
+        /* Alerts List */
+        .alert-item { 
+            background: #312e81; /* Deep indigo background for alerts */
+            border-left: 5px solid #f43f5e; /* Rose red accent for bad alerts */
+            padding: 14px; margin-bottom: 12px; font-size: 15px; line-height: 1.4; 
+            border-radius: 12px;
+            color: #e2e8f0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .alert-good { 
+            background: #064e3b; /* Deep emerald background */
+            border-left-color: #10b981; /* Bright green accent */
+            color: #d1fae5;
+        }
+    </style>
 </head>
-<div>
-	<div class = "main">
-		<nav class="nav" style="color:white">
-		  <a class="nav-link active" target="_blank" href="https://github.com/conrad465">github</a>
-		  <a class="nav-link" target="_blank"href="https://www.linkedin.com/in/conrad-mitchell-82a039141/">linkedin</a>
-		  <a class="nav-link" target="_blank" href="static/resume.pdf">resume</a>
-            <a class="nav-link" target="_blank" href="http://eepurl.com/dzL7J5">contact</a>
-		</nav>
-		<div class = "blurb" id = "about-tab">
-			<div class="thumb">
-				<h1>About</h1>
-     			<img src="static/images/monkey.jpg" alt="img-fluid" class="responsive-image monkey">
-			</div>
-			<div class="sub-blurb">
-				  Hi. My name is Conrad Mitchell. I'm a junior studying Computer Science with minors in Electrical Engineering and Philosophy at Duke University. I'm interested in problem solving and thinking about how things work. I enjoy large scale projects with lots of moving parts, and I aspire to develop a well-rounded CS skillset-- from computer circuitry all the way to neural nets.
-			</div>  
-		</div>
-		<div class = "blurb skills" id="skills-tab">
-				<h1>Skills</h1>
-				<div class="invis" id = "s">
-					<a class="btn btn-primary" href="#" role="button">Link</a>
-					<input class="btn btn-primary" type="reset" value="Network Architecture">
-					<input class="btn btn-primary" type="submit" value="Python">
-					<input class="btn btn-primary" type="reset" value="C">
-					<input class="btn btn-primary" type="reset" value="Machine Learning">
-					<input class="btn btn-primary" type="button" value="SQL">
-					<input class="btn btn-primary" type="reset" value="Javascript">
-					<br>
-					<input class="btn btn-primary" type="button" value="HTML">
-					<input class="btn btn-primary" type="submit" value="CSS">
-					<input class="btn btn-primary" type="button" value="Java">
+<body>
 
-					<input class="btn btn-primary" type="button" value="GIT">
-					<input class="btn btn-primary" type="submit" value="Virtual Machines">
-					<input class="btn btn-primary" type="submit" value="MATLAB">
-					<input class="btn btn-primary" type="button" value="Google Cloud">
-					<input class="btn btn-primary" type="submit" value="Computer Architecture">
-				</div>			 
-		</div>
+    <div class="dashboard">
+        <!-- Left Column: Subway & Alerts -->
+        <div class="col-left">
+            <h1>
+                <span>North Station</span>
+                <span id="main-clock">--:--</span>
+            </h1>
+            
+            <h2>Subway Departures</h2>
+            <div class="subway-grid">
+                <!-- Orange Line Southbound (Inbound) -->
+                <div class="subway-quadrant quad-orange">
+                    <div class="quad-title">Orange Line - Forest Hills</div>
+                    <div id="orange-inbound"><div class="train-row">Loading...</div></div>
+                </div>
+                
+                <!-- Orange Line Northbound (Outbound) -->
+                <div class="subway-quadrant quad-orange">
+                    <div class="quad-title">Orange Line - Oak Grove</div>
+                    <div id="orange-outbound"><div class="train-row">Loading...</div></div>
+                </div>
 
-		<div class = "blurb" id="project-tab">
-				<div class="sub-blurb" >
-					<div class="thumb">
-						<h1>Projects</h1>
-					</div>
-					<div class = "invis" id = "carcon" >
-					  <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel" data-interval="false" onclick="activate()">
-					  <div class="carousel-inner" role="listbox">
-					    <div class="carousel-item active" id ="p0">
-					    	<img class="d-block img-fluid" src="static/images/Vooga.png" alt="Second slide">
-					    </div>
-					    <div class="carousel-item" id ="p1">
-					      <img class="d-block img-fluid" src="static/images/IDC.png" alt="Second slide">
-					    </div>
-					    <div class="carousel-item" id = "p2">
-					      <img class="d-block img-fluid" src="static/images/Learn.png" alt="Third slide">
-					    </div>
-					    <div class="carousel-item" id = "p3">
-					      <img class="d-block img-fluid" src="static/images/Census.png" alt="Fourth slide">
-					    </div>
-					    
-					    <div class="carousel-item" id = "p4">
-					      <img class="d-block img-fluid" src="static/images/healthy.png" alt="Fourth slide">
-					    </div>
+                <!-- Green Line Westbound (Inbound) -->
+                <div class="subway-quadrant quad-green">
+                    <div class="quad-title">Green Line - Westbound</div>
+                    <div id="green-inbound"><div class="train-row">Loading...</div></div>
+                </div>
 
-					     <div class="carousel-item" id = "p5">
-					      <img class="d-block img-fluid" src="static/images/website.png" alt="Fifth slide">
-					    </div>
+                <!-- Green Line Eastbound (Outbound) -->
+                <div class="subway-quadrant quad-green">
+                    <div class="quad-title">Green Line - Eastbound</div>
+                    <div id="green-outbound"><div class="train-row">Loading...</div></div>
+                </div>
+            </div>
 
-					  </div>
-					  <a class="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-slide="prev" onclick = "toggle('left')">
-					    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-					    <span class="sr-only">Previous</span>
-					  </a>
-					  <a class="carousel-control-next" href="#carouselExampleIndicators" role="button" data-slide="next" data-slide="prev" onclick = "toggle('right')">
-					    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-					    <span class="sr-only">Next</span>
-					  </a>
-					</div>
-					<div class = "description"></div>
-				</div>
-			</div>
-		</div>
+            <h2>Service Alerts</h2>
+            <div id="alerts-container">
+                <div class="alert-item">Checking alerts...</div>
+            </div>
+        </div>
+
+        <!-- Right Column: Weather, Sports, History -->
+        <div class="col-right">
+            <h2>Current Weather</h2>
+            <div class="weather-container">
+                <div class="weather-main">
+                    <div class="weather-temp" id="weather-temp">--°F</div>
+                    <div class="weather-desc" id="weather-desc">Loading...</div>
+                </div>
+                <div class="weather-details" id="weather-details">
+                    <span>H: --°</span> | <span>L: --°</span> | <span>Rain: --%</span>
+                </div>
+            </div>
+
+            <h2>My Teams</h2>
+            <div class="sports-container" id="sports-container">
+                <div class="sport-game">Loading sports data...</div>
+            </div>
+
+            <h2>On This Day in History</h2>
+            <div id="history-container" class="history-box">
+                Loading history fact...
+            </div>
+        </div>
     </div>
 
+    <script>
+        // --- 1. CLOCK ---
+        function updateClock() {
+            var now = new Date();
+            var timeString = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+            document.getElementById('main-clock').innerText = timeString;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
 
 
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
-<script type="text/javascript" src="static/script.js"></script>
+        // --- 2. MBTA SUBWAY LOGIC ---
+        function fetchSubway() {
+            var url = 'https://api-v3.mbta.com/predictions?filter[stop]=place-north&include=route,trip';
+            
+            fetch(url, { cache: 'no-store' })
+            .then(function(res) { return res.json(); })
+            .then(function(json) {
+                if (!json.data || json.data.length === 0) return;
+
+                var orangeIn = [], orangeOut = [], greenIn = [], greenOut = [];
+                var seenTrips = {};
+
+                var sortedData = json.data.sort(function(a, b) {
+                    var tA = a.attributes.departure_time || a.attributes.arrival_time;
+                    var tB = b.attributes.departure_time || b.attributes.arrival_time;
+                    if (!tA && !tB) return 0; 
+                    if (!tA) return 1;
+                    if (!tB) return -1;
+                    return new Date(tA).getTime() - new Date(tB).getTime();
+                });
+
+                for (var i = 0; i < sortedData.length; i++) {
+                    var p = sortedData[i];
+                    var routeData = p.relationships && p.relationships.route && p.relationships.route.data;
+                    if (!routeData) continue;
+
+                    var isOrange = routeData.id === 'Orange';
+                    var isGreen = routeData.id.indexOf('Green') !== -1;
+                    if (!isOrange && !isGreen) continue;
+
+                    var tripData = p.relationships && p.relationships.trip && p.relationships.trip.data;
+                    var tripId = tripData ? tripData.id : null;
+                    if (tripId) {
+                        if (seenTrips[tripId]) continue;
+                        seenTrips[tripId] = true;
+                    }
+
+                    var direction = p.attributes.direction_id; 
+                    var targetTime = p.attributes.departure_time || p.attributes.arrival_time;
+                    var timeStr = p.attributes.status || 'TBD';
+                    
+                    if (targetTime) {
+                        var diffMs = new Date(targetTime).getTime() - new Date().getTime();
+                        var diffMins = Math.floor(diffMs / 60000);
+                        if (diffMins < -1) continue; 
+                        if (diffMins <= 0) timeStr = p.attributes.status || 'Boarding';
+                        else if (diffMins === 1) timeStr = '1 min';
+                        else timeStr = diffMins + ' min';
+                    }
+
+                    var destination = isGreen ? routeData.id.replace('Green-', '') + ' Line' : 'Train';
+                    if (tripData && json.included) {
+                        for (var j = 0; j < json.included.length; j++) {
+                            if (json.included[j].type === 'trip' && json.included[j].id === tripData.id) {
+                                destination = json.included[j].attributes.headsign || destination;
+                                break;
+                            }
+                        }
+                    }
+
+                    var htmlStr = '<div class="train-row"><span>' + destination + '</span><span class="time-away">' + timeStr + '</span></div>';
+
+                    if (isOrange && direction === 0) orangeIn.push(htmlStr);
+                    if (isOrange && direction === 1) orangeOut.push(htmlStr);
+                    if (isGreen && direction === 0) greenIn.push(htmlStr);
+                    if (isGreen && direction === 1) greenOut.push(htmlStr);
+                }
+
+                function renderQuad(id, arr, maxEntries) {
+                    var el = document.getElementById(id);
+                    if (arr.length === 0) el.innerHTML = '<div class="train-row">No trains</div>';
+                    else el.innerHTML = arr.slice(0, maxEntries).join('');
+                }
+
+                renderQuad('orange-inbound', orangeIn, 2);
+                renderQuad('orange-outbound', orangeOut, 2);
+                renderQuad('green-inbound', greenIn, 4);
+                renderQuad('green-outbound', greenOut, 4);
+            })
+            .catch(function(err) { console.error('MBTA Fetch Error:', err); });
+        }
 
 
-    </body>
+        // --- 3. MBTA SERVICE ALERTS ---
+        function fetchAlerts() {
+            var url = 'https://api-v3.mbta.com/alerts?filter[stop]=place-north&filter[route_type]=0,1';
+            fetch(url, { cache: 'no-store' })
+            .then(function(res) { return res.json(); })
+            .then(function(json) {
+                var container = document.getElementById('alerts-container');
+                if (!json.data || json.data.length === 0) {
+                    container.innerHTML = '<div class="alert-item alert-good">All clear. No active subway alerts.</div>';
+                    return;
+                }
+                var html = '';
+                for (var i = 0; i < json.data.length; i++) {
+                    var alertText = json.data[i].attributes.short_header || json.data[i].attributes.header || 'Active service alert.';
+                    html += '<div class="alert-item">' + alertText + '</div>';
+                }
+                container.innerHTML = html;
+            });
+        }
+
+
+        // --- 4. WEATHER ---
+        function fetchWeather() {
+            var url = 'https://api.open-meteo.com/v1/forecast?latitude=42.3601&longitude=-71.0589&current_weather=true&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&timezone=America%2FNew_York';
+            fetch(url, { cache: 'no-store' })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.current_weather) {
+                    document.getElementById('weather-temp').innerText = Math.round(data.current_weather.temperature) + '°F';
+                    var code = data.current_weather.weathercode;
+                    var desc = 'Clear';
+                    if (code >= 1 && code <= 3) desc = 'Partly Cloudy';
+                    if (code == 45 || code == 48) desc = 'Fog';
+                    if (code >= 51 && code <= 55) desc = 'Drizzle';
+                    if (code >= 61 && code <= 65) desc = 'Rain';
+                    if (code >= 71 && code <= 75) desc = 'Snow';
+                    if (code >= 95) desc = 'Thunderstorm';
+                    document.getElementById('weather-desc').innerText = desc;
+                }
+                if (data.daily) {
+                    var high = Math.round(data.daily.temperature_2m_max[0]);
+                    var low = Math.round(data.daily.temperature_2m_min[0]);
+                    var rainChance = data.daily.precipitation_probability_max[0] || 0;
+                    document.getElementById('weather-details').innerHTML = 
+                        '<span>H: ' + high + '°</span> | ' +
+                        '<span>L: ' + low + '°</span> | ' +
+                        '<span>Rain Chance: ' + rainChance + '%</span>';
+                }
+            });
+        }
+
+
+        // --- 5. SPORTS (MAX 1 FUTURE GAME PER TEAM) ---
+        function fetchSports() {
+            function getFormatDate(offsetDays) {
+                var d = new Date();
+                d.setDate(d.getDate() + offsetDays);
+                var yy = d.getFullYear();
+                var mm = ('0' + (d.getMonth() + 1)).slice(-2);
+                var dd = ('0' + d.getDate()).slice(-2);
+                return yy + mm + dd;
+            }
+            var dateRange = getFormatDate(-1) + '-' + getFormatDate(7);
+
+            var urls = [
+                'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=' + dateRange,
+                'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=' + dateRange,
+                'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=' + dateRange,
+                'https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard?dates=' + dateRange
+            ];
+
+            var myTeams = ['Boston Red Sox', 'Washington Nationals', 'Washington Commanders', 'Boston Celtics', 'Duke Blue Devils'];
+            var allGames = [];
+
+            Promise.all(urls.map(function(u) {
+                return fetch(u, {cache: 'no-store'}).then(function(res) { return res.json(); }).catch(function(){ return {events:[]}; });
+            }))
+            .then(function(results) {
+                results.forEach(function(league) {
+                    if (league.events) allGames = allGames.concat(league.events);
+                });
+
+                var html = '';
+                var gamesFound = 0;
+                var futureGamesPerTeam = {}; 
+
+                allGames.sort(function(a,b) { return new Date(a.date).getTime() - new Date(b.date).getTime(); });
+
+                for (var i = 0; i < allGames.length; i++) {
+                    var game = allGames[i];
+                    var comp = game.competitions[0];
+                    var homeTeam = comp.competitors[0];
+                    var awayTeam = comp.competitors[1];
+
+                    var matchedTeams = [];
+                    if (myTeams.indexOf(homeTeam.team.displayName) !== -1) matchedTeams.push(homeTeam.team.displayName);
+                    if (myTeams.indexOf(awayTeam.team.displayName) !== -1) matchedTeams.push(awayTeam.team.displayName);
+
+                    if (matchedTeams.length === 0) continue;
+
+                    var status = game.status.type;
+                    var isFinal = (status.name === 'STATUS_FINAL');
+                    var isLive = (status.state === 'in');
+
+                    if (!isFinal && !isLive) {
+                        var shouldShowFuture = false;
+                        for (var m = 0; m < matchedTeams.length; m++) {
+                            var tName = matchedTeams[m];
+                            if (!futureGamesPerTeam[tName]) {
+                                shouldShowFuture = true;
+                                futureGamesPerTeam[tName] = true;
+                            }
+                        }
+                        if (!shouldShowFuture) continue;
+                    }
+
+                    gamesFound++;
+                    var vsText = awayTeam.team.abbreviation + ' @ ' + homeTeam.team.abbreviation;
+                    var statusHtml = '';
+
+                    if (isFinal) {
+                        statusHtml = 'Final: ' + awayTeam.score + ' - ' + (homeTeam.score || '0');
+                    } else if (isLive) {
+                        statusHtml = '<span class="game-live">LIVE: ' + awayTeam.score + ' - ' + homeTeam.score + ' (' + status.detail + ')</span>';
+                    } else {
+                        var gDate = new Date(game.date);
+                        var dayStr = gDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                        var timeStr = gDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                        statusHtml = dayStr + ' ' + timeStr;
+                    }
+
+                    html += '<div class="sport-game">';
+                    html += '<span class="team-name">' + vsText + '</span>';
+                    html += '<span class="game-status">' + statusHtml + '</span>';
+                    html += '</div>';
+                }
+
+                var container = document.getElementById('sports-container');
+                if (gamesFound === 0) {
+                    container.innerHTML = '<div class="sport-game">No recent or upcoming games found.</div>';
+                } else {
+                    container.innerHTML = html;
+                }
+            });
+        }
+
+
+        // --- 6. HISTORY FACT ---
+        function fetchHistory() {
+            var d = new Date();
+            var month = ('0' + (d.getMonth() + 1)).slice(-2);
+            var day = ('0' + d.getDate()).slice(-2);
+            var url = 'https://en.wikipedia.org/api/rest_v1/feed/onthisday/events/' + month + '/' + day;
+            
+            fetch(url)
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.events && data.events.length > 0) {
+                    var randomIndex = Math.floor(Math.random() * data.events.length);
+                    var event = data.events[randomIndex];
+                    document.getElementById('history-container').innerHTML = 
+                        '<span class="history-year">' + event.year + ':</span> ' + event.text;
+                }
+            })
+            .catch(function() {
+                document.getElementById('history-container').innerText = "History data unavailable.";
+            });
+        }
+
+
+        // --- 7. TIMERS & INITIALIZATION ---
+        function updateFastData() {
+            fetchSubway();
+            fetchAlerts();
+            fetchSports();
+        }
+        
+        function updateSlowData() {
+            fetchWeather();
+            fetchHistory();
+        }
+
+        updateFastData();
+        updateSlowData();
+
+        setInterval(updateFastData, 60000);
+        setInterval(updateSlowData, 3600000);
+
+    </script>
+</body>
 </html>
