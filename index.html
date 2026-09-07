@@ -25,6 +25,7 @@
             z-index: 0; 
         }
         .bg-photo.is-visible { opacity: 1; }
+
         /* Dark scrim so tiles/text stay readable over any photo */
         .bg-scrim { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
@@ -90,6 +91,16 @@
             box-shadow: 0 4px 14px -4px rgba(0,0,0,0.20);
         }
         .header-time { font-size: 38px; font-weight: 600; color: #ffffff; text-shadow: 0 2px 6px rgba(0,0,0,0.78); }
+
+        /* Hello World */
+        .hello-world {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            color: #ffffff;
+            text-shadow: 0 3px 8px rgba(0,0,0,0.9);
+            padding: 4px 0 6px;
+        }
 
         /* MBTA Subway Grid (2x2) */
         /* iPad Air 1 (iOS 12 Safari) does not support flexbox "gap", so tiles */
@@ -265,6 +276,7 @@
             border-left-color: #2b7a59; 
             color: #ffffff;
         }
+
         /* Periodic photo-only mode: temporarily remove fixed UI so the display can rest. */
         body.photo-only .dashboard {
             opacity: 0;
@@ -298,6 +310,8 @@
                 <span class="hw-details" id="weather-details">H: --° | L: --° | Rain: --%</span>
             </div>
         </div>
+
+        <div class="hello-world">Hello World</div>
 
         <div class="ticker-row">
             <div class="ticker ticker-news">
@@ -598,6 +612,7 @@
         function renderTicker(id, items) {
             var container = document.getElementById(id);
             if (!container) return;
+
             if (!items || items.length === 0) items = ['No information available.'];
 
             var segmentHtml = '';
@@ -656,6 +671,7 @@
             setupTickerAnimation('sports-ticker');
         });
 
+
         // --- 5. SPORTS ---
         function fetchSports() {
             function getFormatDate(offsetDays) {
@@ -666,6 +682,7 @@
                 var dd = ('0' + d.getDate()).slice(-2);
                 return yy + mm + dd;
             }
+
             // Tighter 3-day window: Yesterday through Tomorrow
             var dateRange = getFormatDate(-1) + '-' + getFormatDate(2);
 
@@ -721,6 +738,7 @@
                             if (!futureGamesPerTeam[tName]) { futureGamesPerTeam[tName] = true; shouldShow = true; }
                         }
                     }
+
                     if (!shouldShow) continue;
 
                     gamesFound++;
@@ -768,6 +786,7 @@
             // and keep rss2json only as the RSS->JSON compatibility bridge.
             var rss = 'https://news.google.com/rss/search?q=site%3Awbur.org%2Fnews&hl=en-US&gl=US&ceid=US%3Aen';
             var url = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rss);
+
             fetch(url, { cache: 'no-store' })
             .then(function(res) { return res.json(); })
             .then(function(json) {
@@ -818,10 +837,13 @@
         document.addEventListener('touchend', function() {
             exitPhotoOnlyMode();
         }, false);
+
         document.addEventListener('click', function() {
             exitPhotoOnlyMode();
         }, false);
+
         schedulePhotoOnlyMode();
+
 
         // --- 6. TIMERS & INITIALIZATION ---
         // Weather and news refresh twice per day (every 12 hours).
