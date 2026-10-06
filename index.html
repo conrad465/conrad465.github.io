@@ -102,7 +102,7 @@
             width: 100%; box-sizing: border-box;
             display: flex; justify-content: space-between; align-items: center;
             padding: 6px 10px 7px;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             border-radius: 14px;
             background: rgba(255,255,255,0.1);
             border: 1px solid rgba(255,255,255,0.16);
@@ -111,16 +111,6 @@
             box-shadow: 0 4px 14px -4px rgba(0,0,0,0.20);
         }
         .header-time { font-size: 38px; font-weight: 600; color: #ffffff; text-shadow: 0 2px 6px rgba(0,0,0,0.78); }
-
-        /* Hello World */
-        .hello-world {
-            text-align: center;
-            font-size: 24px;
-            font-weight: 600;
-            color: #ffffff;
-            text-shadow: 0 3px 8px rgba(0,0,0,0.9);
-            padding: 4px 0 6px;
-        }
 
         /* MBTA Subway Grid (2x2) */
         .subway-grid { 
@@ -167,14 +157,14 @@
         .header-weather > span { margin-left: 5px; }
         .header-weather > span:first-child { margin-left: 0; }
 
-        /* Compact transitioning headlines beneath the clock/weather header */
+        /* Ticker rows for Sports and 3 Event Bars */
         .ticker-row {
             width: 100%;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
             gap: 5px;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
         }
         .ticker {
             display: flex;
@@ -217,7 +207,7 @@
             text-shadow: 0 3px 8px rgba(0,0,0,0.95);
             white-space: nowrap;
             overflow: hidden;
-            text-overflow: ellipsis; /* Safari-safe truncation for long headlines */
+            text-overflow: ellipsis; /* Truncates the end of the description */
             opacity: 0;
             transition: opacity 0.6s ease-in-out;
             pointer-events: none;
@@ -226,9 +216,8 @@
             opacity: 1;
         }
 
-        /* Inline prefixes */
-        .prefix-news { font-weight: 800; color: #ffffff; margin-right: 6px; }
-        .prefix-sports { font-weight: 800; color: #ff8a75; margin-right: 6px; }
+        /* Inline prefix standardizing to crisp white */
+        .prefix-label { font-weight: 800; color: #ffffff; margin-right: 8px; text-transform: uppercase; }
 
         .hw-temp { font-size: 38px; font-weight: 600; color: #ffffff; text-shadow: 0 2px 6px rgba(0,0,0,0.78); }
         .hw-desc { font-size: 30px; color: #f3f1ec; font-weight: 500; text-shadow: 0 2px 6px rgba(0,0,0,0.78); }
@@ -285,17 +274,25 @@
             </div>
         </div>
 
-        <div class="hello-world">Hello World</div>
-
         <div class="ticker-row">
-            <div class="ticker ticker-news">
-                <div class="ticker-track" id="news-ticker">
-                    <span class="ticker-item active">Loading Boston headlines...</span>
-                </div>
-            </div>
             <div class="ticker ticker-sports">
                 <div class="ticker-track" id="sports-ticker">
                     <span class="ticker-item active">Loading sports data...</span>
+                </div>
+            </div>
+            <div class="ticker ticker-events">
+                <div class="ticker-track" id="events-ticker-1">
+                    <span class="ticker-item active">Loading events...</span>
+                </div>
+            </div>
+            <div class="ticker ticker-events">
+                <div class="ticker-track" id="events-ticker-2">
+                    <span class="ticker-item active">Loading events...</span>
+                </div>
+            </div>
+            <div class="ticker ticker-events">
+                <div class="ticker-track" id="events-ticker-3">
+                    <span class="ticker-item active">Loading events...</span>
                 </div>
             </div>
         </div>
@@ -391,7 +388,7 @@
             bingImages = results.filter(function(r) { return r && r.url; });
             if (bingImages.length > 0) {
                 rotateBackground();
-                setInterval(rotateBackground, 60000); // every 1 minute
+                setInterval(rotateBackground, 60000); 
             }
         });
 
@@ -465,16 +462,13 @@
                         el.innerHTML = '<div class="train-row">No trains</div>';
                         return;
                     }
-                    
                     var sliced = arr.slice(0, 3);
                     var hasNumber = false;
                     for(var k=0; k<sliced.length; k++) {
                         if (sliced[k] !== 'BRD') hasNumber = true;
                     }
-                    
                     var displayString = sliced.join(', ');
                     if (hasNumber) displayString += ' min';
-
                     el.innerHTML = '<div class="train-row"><span class="time-away">' + displayString + '</span></div>';
                 }
 
@@ -530,9 +524,7 @@
                     var high = Math.round(data.daily.temperature_2m_max[0]);
                     var low = Math.round(data.daily.temperature_2m_min[0]);
                     var rainChance = data.daily.precipitation_probability_max[0] || 0;
-                    
-                    document.getElementById('weather-details').innerText = 
-                        'H: ' + high + '° | L: ' + low + '° | Rain: ' + rainChance + '%';
+                    document.getElementById('weather-details').innerText = 'H: ' + high + '° | L: ' + low + '° | Rain: ' + rainChance + '%';
                 }
             });
         }
@@ -541,36 +533,38 @@
         // --- 6. TICKER CYCLING ---
         var tickerIntervals = {};
 
-        function renderTicker(id, items, prefix) {
+        function renderTicker(id, items, prefix, durationMs, staggerMs) {
             var container = document.getElementById(id);
             if (!container) return;
-
             if (!items || items.length === 0) items = ['No information available.'];
 
             var html = '';
-            var prefixClass = id === 'news-ticker' ? 'prefix-news' : 'prefix-sports';
-            
             for (var i = 0; i < items.length; i++) {
                 html += '<span class="ticker-item ' + (i === 0 ? 'active' : '') + '">';
                 if (prefix) {
-                    html += '<span class="' + prefixClass + '">' + prefix + ':</span>';
+                    html += '<span class="prefix-label">' + prefix + ':</span>';
                 }
                 html += items[i] + '</span>';
             }
             container.innerHTML = html;
 
-            if (tickerIntervals[id]) {
-                clearInterval(tickerIntervals[id]);
-            }
+            if (tickerIntervals[id]) clearInterval(tickerIntervals[id]);
 
             var nodes = container.querySelectorAll('.ticker-item');
             if (nodes.length > 1) {
                 var currentIndex = 0;
-                tickerIntervals[id] = setInterval(function() {
-                    nodes[currentIndex].classList.remove('active');
-                    currentIndex = (currentIndex + 1) % nodes.length;
-                    nodes[currentIndex].classList.add('active');
-                }, 6000); 
+                // Add a timeout stagger so the 3 event bars don't flip simultaneously
+                setTimeout(function() {
+                    tickerIntervals[id] = setInterval(function() {
+                        if (!container.isConnected) {
+                            clearInterval(tickerIntervals[id]);
+                            return;
+                        }
+                        nodes[currentIndex].classList.remove('active');
+                        currentIndex = (currentIndex + 1) % nodes.length;
+                        nodes[currentIndex].classList.add('active');
+                    }, durationMs || 6000); 
+                }, staggerMs || 0);
             }
         }
 
@@ -585,7 +579,6 @@
                 var dd = ('0' + d.getDate()).slice(-2);
                 return yy + mm + dd;
             }
-
             var dateRange = getFormatDate(-1) + '-' + getFormatDate(2);
             var urls = [
                 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=' + dateRange,
@@ -609,7 +602,6 @@
                 var gamesFound = 0;
                 var pastGamesPerTeam = {}; 
                 var futureGamesPerTeam = {}; 
-
                 allGames.sort(function(a,b) { return new Date(a.date).getTime() - new Date(b.date).getTime(); });
 
                 for (var i = 0; i < allGames.length; i++) {
@@ -641,7 +633,6 @@
                     }
 
                     if (!shouldShow) continue;
-
                     gamesFound++;
                     var vsText = (awayTeam.team.shortDisplayName || awayTeam.team.name) + ' @ ' + (homeTeam.team.shortDisplayName || homeTeam.team.name);
                     var statusHtml = '';
@@ -649,7 +640,7 @@
                     if (isFinal) {
                         statusHtml = awayTeam.score + ' - ' + (homeTeam.score || '0');
                     } else if (isLive) {
-                        statusHtml = 'LIVE: ' + awayTeam.score + ' - ' + homeTeam.score; 
+                        statusHtml = '<span style="color:#ff8a75;">LIVE:</span> ' + awayTeam.score + ' - ' + homeTeam.score; 
                     } else {
                         var gDate = new Date(game.date);
                         var dayStr = gDate.toLocaleDateString('en-US', { weekday: 'short' });
@@ -662,34 +653,120 @@
                 }
 
                 if (gamesFound === 0) {
-                    renderTicker('sports-ticker', ['No recent or upcoming games found.'], 'Sports');
+                    renderTicker('sports-ticker', ['No recent or upcoming games found.'], 'Sports', 6000, 0);
                 } else {
                     var items = html.split('|||').filter(Boolean);
-                    renderTicker('sports-ticker', items, 'Sports');
+                    // Sports rotates every 6 seconds
+                    renderTicker('sports-ticker', items, 'Sports', 6000, 0);
                 }
             });
         }
 
 
-        // --- 8. LOCAL BOSTON NEWS ---
-        function fetchNews() {
-            var rss = 'https://news.google.com/rss/search?q=site%3Awbur.org%2Fnews&hl=en-US&gl=US&ceid=US%3Aen';
+        // --- 8. LOCAL BOSTON EVENTS ---
+        function fetchEvents() {
+            var rss = 'https://www.thebostoncalendar.com/events.rss';
             var url = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rss);
 
             fetch(url, { cache: 'no-store' })
             .then(function(res) { return res.json(); })
             .then(function(json) {
-                if (json.status !== 'ok' || !json.items || json.items.length === 0) {
-                    renderTicker('news-ticker', ['No headlines available.'], 'News');
-                    return;
+                if (!json || json.status !== 'ok' || !json.items) return;
+                
+                var allowedCategories = ['art', 'date idea', 'festival', 'fair', 'food', 'music', 'seasonal'];
+                var filteredEvents = [];
+
+                for (var i = 0; i < json.items.length; i++) {
+                    var item = json.items[i];
+                    var cats = item.categories || [];
+                    var catsLower = cats.map(function(c) { return c.toLowerCase(); });
+                    
+                    // Exclude recurring / ongoing events
+                    var isRecurring = false;
+                    for (var c=0; c<catsLower.length; c++) {
+                        if (catsLower[c].indexOf('recurring') !== -1 || catsLower[c].indexOf('ongoing') !== -1) {
+                            isRecurring = true;
+                        }
+                    }
+                    var rawTitle = item.title || '';
+                    var rawDesc = item.description || '';
+                    if (/recurring|ongoing/i.test(rawTitle) || /recurring|ongoing/i.test(rawDesc)) {
+                        isRecurring = true;
+                    }
+                    if (isRecurring) continue;
+
+                    // Parse Date and Location out of HTML payload
+                    var whenMatch = rawDesc.match(/When:.*?<\/strong>\s*(.*?)(?:<br|<\/p)/i);
+                    var whereMatch = rawDesc.match(/Where:.*?<\/strong>\s*(.*?)(?:<br|<\/p)/i);
+                    var whenText = whenMatch ? whenMatch[1].replace(/(<([^>]+)>)/gi, "").trim() : '';
+                    var whereText = whereMatch ? whereMatch[1].replace(/(<([^>]+)>)/gi, "").trim() : '';
+
+                    // Validate it's a weekend event
+                    var isWeekend = /Friday|Saturday|Sunday|Fri|Sat|Sun/i.test(whenText) || /Friday|Saturday|Sunday/i.test(rawTitle);
+                    if (!isWeekend) continue;
+
+                    // Must be in one of the approved categories
+                    var hasAllowedCat = false;
+                    for (var c=0; c<catsLower.length; c++) {
+                        for (var ac=0; ac<allowedCategories.length; ac++) {
+                            if (catsLower[c].indexOf(allowedCategories[ac]) !== -1) hasAllowedCat = true;
+                        }
+                    }
+                    
+                    // Fallback to text search if no official tag was provided
+                    if (!hasAllowedCat) {
+                        var descLower = rawDesc.toLowerCase();
+                        var titleLower = rawTitle.toLowerCase();
+                        for (var ac=0; ac<allowedCategories.length; ac++) {
+                            if (descLower.indexOf(allowedCategories[ac]) !== -1 || titleLower.indexOf(allowedCategories[ac]) !== -1) {
+                                hasAllowedCat = true; break;
+                            }
+                        }
+                    }
+                    if (!hasAllowedCat) continue;
+
+                    // Strip HTML completely for remaining space description
+                    var cleanDesc = rawDesc.replace(/<p><strong>(When|Where):.*?<\/p>/gi, '')
+                                           .replace(/(<([^>]+)>)/gi, "")
+                                           .replace(/\s+/g, " ")
+                                           .trim();
+                    
+                    if (cleanDesc.length > 150) cleanDesc = cleanDesc.substring(0, 150) + '...';
+
+                    // Formatting visual elements cleanly
+                    var displayDate = whenText ? whenText.replace(/(?:, \d{4}| at | \d{1,2}:\d{2}\s*(am|pm|AM|PM)).*/, '').trim() : 'This Wknd';
+                    var displayLoc = whereText ? whereText.split(',')[0].trim() : 'Boston';
+
+                    // Using span tags for formatting Data inside the event text
+                    var displayStr = "<span style='color:#6fe3a5;'>" + displayDate + "</span>  |  " + 
+                                     "<span style='font-weight:600;'>" + rawTitle + "</span>  |  " + 
+                                     displayLoc + "  |  " + 
+                                     "<span style='opacity:0.8; font-size: 21px;'>" + cleanDesc + "</span>";
+                    
+                    filteredEvents.push(displayStr);
                 }
 
-                var top3 = json.items.slice(0, 3);
-                var items = [];
-                for (var i = 0; i < top3.length; i++) {
-                    items.push(top3[i].title);
+                if (filteredEvents.length === 0) {
+                    filteredEvents = ["No matching weekend events found in selected categories."];
                 }
-                renderTicker('news-ticker', items, 'News');
+
+                // Distribute items across the 3 event lists
+                var list1 = [], list2 = [], list3 = [];
+                for (var j = 0; j < filteredEvents.length; j++) {
+                    if (j % 3 === 0) list1.push(filteredEvents[j]);
+                    else if (j % 3 === 1) list2.push(filteredEvents[j]);
+                    else list3.push(filteredEvents[j]);
+                }
+                
+                // Keep bars rotating if data is scarce
+                if (list1.length === 0) list1 = filteredEvents;
+                if (list2.length === 0) list2 = filteredEvents;
+                if (list3.length === 0) list3 = filteredEvents;
+
+                // All 3 event bars rotate every 3000ms, but staggered by 1000ms so they do a nice "wave" cascade
+                renderTicker('events-ticker-1', list1, 'Event', 3000, 0);
+                renderTicker('events-ticker-2', list2, 'Event', 3000, 1000);
+                renderTicker('events-ticker-3', list3, 'Event', 3000, 2000);
             });
         }
 
@@ -734,12 +811,13 @@
         
         function updateSlowData() {
             fetchWeather();
-            fetchNews();
+            fetchEvents();
         }
 
         updateFastData();
         updateSlowData();
 
+        // Refreshes trains, alerts, games every minute
         setInterval(updateFastData, 60000); 
 
     </script>
