@@ -662,82 +662,95 @@
         }
 
 
-        // --- 8. LOCAL BOSTON EVENTS (Direct HTML Scrape) ---
+                // --- 8. LOCAL BOSTON EVENTS (Direct HTML Scrape with Auto-Failover) ---
         function fetchEvents() {
-            // Using your specific filters, but removed the hardcoded Oct 10 2026 date 
-            // so the dashboard always rolls forward to the current/upcoming weekend.
             var targetUrl = 'https://www.thebostoncalendar.com/events?tags%5B%5D=Art&tags%5B%5D=Date%20Idea&tags%5B%5D=Festivals%20%26%20Fairs&tags%5B%5D=Food&tags%5B%5D=Music&tags%5B%5D=Seasonal&weekend=1';
             
-            // corsproxy.io is much friendlier to GitHub Pages and older Safari
-            // Fallback alternative if needed: 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(targetUrl)
-            var proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
+            // A list of fallback proxies to ensure the dashboard stays alive if one gets blocked
+            var proxies = [
+                'https://api.codetabs.com/v1/proxy?quest=',
+                'https://api.allorigins.win/raw?url='
+            ];
 
-            fetch(proxyUrl, { cache: 'no-store' })
-            .then(function(res) { 
-                if (!res.ok) throw new Error("HTTP " + res.status);
-                // corsproxy returns the raw HTML string, not a JSON object
-                return res.text(); 
-            })
-            .then(function(htmlText) {
-                if (!htmlText) throw new Error("No HTML data returned");
-
-                var parser = new DOMParser();
-                var doc = parser.parseFromString(htmlText, "text/html");
-                
-                var eventNodes = doc.querySelectorAll('li.event');
-                var filteredEvents = [];
-
-                for (var i = 0; i < eventNodes.length; i++) {
-                    var node = eventNodes[i];
-                    
-                    var rawTitle = node.querySelector('h3') ? node.querySelector('h3').textContent.trim() : '';
-                    var rawTime = node.querySelector('.time') ? node.querySelector('.time').textContent.replace(/\s+/g, ' ').trim() : '';
-                    var rawLoc = node.querySelector('.location') ? node.querySelector('.location').textContent.trim() : 'Boston';
-                    var rawDesc = node.querySelector('.description') ? node.querySelector('.description').textContent.trim() : '';
-                    
-                    // The URL already filters for weekends and tags. We just need to exclude recurring/ongoing.
-                    var isRecurring = /recurring|ongoing|every/i.test(rawTitle) || /recurring|ongoing|every/i.test(rawDesc);
-                    if (isRecurring) continue;
-
-                    var cleanDesc = rawDesc.replace(/\s+/g, " ").trim();
-                    if (cleanDesc.length > 100) cleanDesc = cleanDesc.substring(0, 100) + '...';
-                    
-                    var displayDate = rawTime.replace(/(?:, \d{4}| at | \d{1,2}:\d{2}\s*(am|pm|AM|PM)).*/, '').trim() || 'This Wknd';
-                    var displayLoc = rawLoc.split(',')[0].trim();
-
-                    var displayStr = "<span style='color:#6fe3a5;'>" + displayDate + "</span>  |  " + 
-                                     "<span style='font-weight:600;'>" + rawTitle + "</span>  |  " + 
-                                     displayLoc + "  |  " + 
-                                     "<span style='opacity:0.8; font-size: 21px;'>" + cleanDesc + "</span>";
-                    
-                    filteredEvents.push(displayStr);
+            function tryProxy(index) {
+                if (index >= proxies.length) {
+                    var errList = ["Event fetch error: Proxies blocked (403/CORS). Will retry later."];
+                    renderTicker('events-ticker-1', errList, 'DEBUG', 6000, 0);
+                    renderTicker('events-ticker-2', errList, 'DEBUG', 6000, 0);
+                    renderTicker('events-ticker-3', errList, 'DEBUG', 6000, 0);
+                    return;
                 }
 
-                if (filteredEvents.length === 0) {
-                    filteredEvents = ["No upcoming events matched your weekend filters."];
-                }
+                var proxyUrl = proxies[index] + encodeURIComponent(targetUrl);
 
-                var list1 = [], list2 = [], list3 = [];
-                for (var j = 0; j < filteredEvents.length; j++) {
-                    if (j % 3 === 0) list1.push(filteredEvents[j]);
-                    else if (j % 3 === 1) list2.push(filteredEvents[j]);
-                    else list3.push(filteredEvents[j]);
-                }
-                
-                if (list1.length === 0) list1 = filteredEvents;
-                if (list2.length === 0) list2 = filteredEvents;
-                if (list3.length === 0) list3 = filteredEvents;
+                fetch(proxyUrl, { cache: 'no-store' })
+                .then(function(res) { 
+                    if (!res.ok) throw new Error("HTTP " + res.status);
+                    return res.text(); 
+                })
+                .then(function(htmlText) {
+                    // Check if the proxy returned an error page instead of the calendar HTML
+                    if (!htmlText || htmlText.indexOf('li class="event"') === -1) {
+                         throw new Error("Invalid HTML returned from proxy");
+                    }
 
-                renderTicker('events-ticker-1', list1, 'Event', 3000, 0);
-                renderTicker('events-ticker-2', list2, 'Event', 3000, 1000);
-                renderTicker('events-ticker-3', list3, 'Event', 3000, 2000);
-            })
-            .catch(function(err) {
-                var errList = ["Event fetch error: " + err.message];
-                renderTicker('events-ticker-1', errList, 'DEBUG', 6000, 0);
-                renderTicker('events-ticker-2', errList, 'DEBUG', 6000, 0);
-                renderTicker('events-ticker-3', errList, 'DEBUG', 6000, 0);
-            });
+                    var parser = new DOMParser();
+                    var doc = parser.parseFromString(htmlText, "text/html");
+                    
+                    var eventNodes = doc.querySelectorAll('li.event');
+                    var filteredEvents = [];
+
+                    for (var i = 0; i < eventNodes.length; i++) {
+                        var node = eventNodes[i];
+                        
+                        var rawTitle = node.querySelector('h3') ? node.querySelector('h3').textContent.trim() : '';
+                        var rawTime = node.querySelector('.time') ? node.querySelector('.time').textContent.replace(/\s+/g, ' ').trim() : '';
+                        var rawLoc = node.querySelector('.location') ? node.querySelector('.location').textContent.trim() : 'Boston';
+                        var rawDesc = node.querySelector('.description') ? node.querySelector('.description').textContent.trim() : '';
+                        
+                        var isRecurring = /recurring|ongoing|every/i.test(rawTitle) || /recurring|ongoing|every/i.test(rawDesc);
+                        if (isRecurring) continue;
+
+                        var cleanDesc = rawDesc.replace(/\s+/g, " ").trim();
+                        if (cleanDesc.length > 100) cleanDesc = cleanDesc.substring(0, 100) + '...';
+                        
+                        var displayDate = rawTime.replace(/(?:, \d{4}| at | \d{1,2}:\d{2}\s*(am|pm|AM|PM)).*/, '').trim() || 'This Wknd';
+                        var displayLoc = rawLoc.split(',')[0].trim();
+
+                        var displayStr = "<span style='color:#6fe3a5;'>" + displayDate + "</span>  |  " + 
+                                         "<span style='font-weight:600;'>" + rawTitle + "</span>  |  " + 
+                                         displayLoc + "  |  " + 
+                                         "<span style='opacity:0.8; font-size: 21px;'>" + cleanDesc + "</span>";
+                        
+                        filteredEvents.push(displayStr);
+                    }
+
+                    if (filteredEvents.length === 0) {
+                        filteredEvents = ["No upcoming events matched your weekend filters."];
+                    }
+
+                    var list1 = [], list2 = [], list3 = [];
+                    for (var j = 0; j < filteredEvents.length; j++) {
+                        if (j % 3 === 0) list1.push(filteredEvents[j]);
+                        else if (j % 3 === 1) list2.push(filteredEvents[j]);
+                        else list3.push(filteredEvents[j]);
+                    }
+                    
+                    if (list1.length === 0) list1 = filteredEvents;
+                    if (list2.length === 0) list2 = filteredEvents;
+                    if (list3.length === 0) list3 = filteredEvents;
+
+                    renderTicker('events-ticker-1', list1, 'Event', 3000, 0);
+                    renderTicker('events-ticker-2', list2, 'Event', 3000, 1000);
+                    renderTicker('events-ticker-3', list3, 'Event', 3000, 2000);
+                })
+                .catch(function(err) {
+                    console.warn("Proxy " + index + " failed:", err.message, "- Trying next proxy...");
+                    tryProxy(index + 1); // Trigger the fallback
+                });
+            }
+
+            tryProxy(0); // Start the chain with the first proxy
         }
 
 
