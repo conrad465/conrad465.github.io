@@ -662,105 +662,66 @@
         }
 
 
-        // --- 8. LOCAL BOSTON EVENTS ---
+        // --- 8. LOCAL BOSTON EVENTS (Direct HTML Scrape) ---
         function fetchEvents() {
-            var rss = 'https://www.thebostoncalendar.com/events.rss';
-            var url = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rss);
+            var targetUrl = 'https://www.thebostoncalendar.com/events';
+            var proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl);
 
-            fetch(url, { cache: 'no-store' })
+            fetch(proxyUrl, { cache: 'no-store' })
             .then(function(res) { 
                 if (!res.ok) throw new Error("HTTP " + res.status);
                 return res.json(); 
             })
-            .then(function(json) {
-                // DIAGNOSTIC 1: API Service Errors (e.g., rss2json rate limits)
-                if (!json || json.status !== 'ok' || !json.items) {
-                    var errorMsg = (json && json.message) ? json.message : "Invalid feed data returned.";
-                    var errList = ["API Error: " + errorMsg];
-                    renderTicker('events-ticker-1', errList, 'DEBUG', 6000, 0);
-                    renderTicker('events-ticker-2', errList, 'DEBUG', 6000, 0);
-                    renderTicker('events-ticker-3', errList, 'DEBUG', 6000, 0);
-                    return;
-                }
+            .then(function(data) {
+                if (!data || !data.contents) throw new Error("No HTML data returned");
+
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(data.contents, "text/html");
                 
+                var eventNodes = doc.querySelectorAll('li.event');
                 var allowedCategories = ['art', 'date idea', 'festival', 'fair', 'food', 'music', 'seasonal'];
                 var filteredEvents = [];
 
-                // DIAGNOSTIC 2: Catch Javascript parsing errors
-                try {
-                    for (var i = 0; i < json.items.length; i++) {
-                        var item = json.items[i];
-                        var cats = item.categories || [];
-                        var catsLower = cats.map(function(c) { return c.toLowerCase(); });
-                        
-                        var isRecurring = false;
-                        for (var c=0; c<catsLower.length; c++) {
-                            if (catsLower[c].indexOf('recurring') !== -1 || catsLower[c].indexOf('ongoing') !== -1) {
-                                isRecurring = true;
-                            }
+                for (var i = 0; i < eventNodes.length; i++) {
+                    var node = eventNodes[i];
+                    
+                    var rawTitle = node.querySelector('h3') ? node.querySelector('h3').textContent.trim() : '';
+                    var rawTime = node.querySelector('.time') ? node.querySelector('.time').textContent.replace(/\s+/g, ' ').trim() : '';
+                    var rawLoc = node.querySelector('.location') ? node.querySelector('.location').textContent.trim() : 'Boston';
+                    var rawCats = node.querySelector('.tags') ? node.querySelector('.tags').textContent.toLowerCase() : '';
+                    var rawDesc = node.querySelector('.description') ? node.querySelector('.description').textContent.trim() : '';
+                    
+                    var isRecurring = /recurring|ongoing|every/i.test(rawTitle) || /recurring|ongoing|every/i.test(rawDesc) || rawCats.indexOf('recurring') !== -1;
+                    if (isRecurring) continue;
+
+                    var isWeekend = /Friday|Saturday|Sunday|Fri|Sat|Sun/i.test(rawTime) || /Friday|Saturday|Sunday/i.test(rawTitle);
+                    if (!isWeekend) continue;
+
+                    var hasAllowedCat = false;
+                    for (var ac = 0; ac < allowedCategories.length; ac++) {
+                        if (rawCats.indexOf(allowedCategories[ac]) !== -1 || rawDesc.toLowerCase().indexOf(allowedCategories[ac]) !== -1) {
+                            hasAllowedCat = true; 
+                            break;
                         }
-                        var rawTitle = item.title || '';
-                        var rawDesc = item.description || '';
-                        if (/recurring|ongoing/i.test(rawTitle) || /recurring|ongoing/i.test(rawDesc)) {
-                            isRecurring = true;
-                        }
-                        if (isRecurring) continue;
-
-                        var whenMatch = rawDesc.match(/When:.*?<\/strong>\s*(.*?)(?:<br|<\/p)/i);
-                        var whereMatch = rawDesc.match(/Where:.*?<\/strong>\s*(.*?)(?:<br|<\/p)/i);
-                        var whenText = whenMatch ? whenMatch[1].replace(/(<([^>]+)>)/gi, "").trim() : '';
-                        var whereText = whereMatch ? whereMatch[1].replace(/(<([^>]+)>)/gi, "").trim() : '';
-
-                        var isWeekend = /Friday|Saturday|Sunday|Fri|Sat|Sun/i.test(whenText) || /Friday|Saturday|Sunday/i.test(rawTitle);
-                        if (!isWeekend) continue;
-
-                        var hasAllowedCat = false;
-                        for (var c=0; c<catsLower.length; c++) {
-                            for (var ac=0; ac<allowedCategories.length; ac++) {
-                                if (catsLower[c].indexOf(allowedCategories[ac]) !== -1) hasAllowedCat = true;
-                            }
-                        }
-                        
-                        if (!hasAllowedCat) {
-                            var descLower = rawDesc.toLowerCase();
-                            var titleLower = rawTitle.toLowerCase();
-                            for (var ac=0; ac<allowedCategories.length; ac++) {
-                                if (descLower.indexOf(allowedCategories[ac]) !== -1 || titleLower.indexOf(allowedCategories[ac]) !== -1) {
-                                    hasAllowedCat = true; break;
-                                }
-                            }
-                        }
-                        if (!hasAllowedCat) continue;
-
-                        var cleanDesc = rawDesc.replace(/<p><strong>(When|Where):.*?<\/p>/gi, '')
-                                               .replace(/(<([^>]+)>)/gi, "")
-                                               .replace(/\s+/g, " ")
-                                               .trim();
-                        
-                        if (cleanDesc.length > 150) cleanDesc = cleanDesc.substring(0, 150) + '...';
-
-                        var displayDate = whenText ? whenText.replace(/(?:, \d{4}| at | \d{1,2}:\d{2}\s*(am|pm|AM|PM)).*/, '').trim() : 'This Wknd';
-                        var displayLoc = whereText ? whereText.split(',')[0].trim() : 'Boston';
-
-                        var displayStr = "<span style='color:#6fe3a5;'>" + displayDate + "</span>  |  " + 
-                                         "<span style='font-weight:600;'>" + rawTitle + "</span>  |  " + 
-                                         displayLoc + "  |  " + 
-                                         "<span style='opacity:0.8; font-size: 21px;'>" + cleanDesc + "</span>";
-                        
-                        filteredEvents.push(displayStr);
                     }
-                } catch(e) {
-                    var errList = ["Parsing Error: " + e.message];
-                    renderTicker('events-ticker-1', errList, 'DEBUG', 6000, 0);
-                    renderTicker('events-ticker-2', errList, 'DEBUG', 6000, 0);
-                    renderTicker('events-ticker-3', errList, 'DEBUG', 6000, 0);
-                    return;
+                    if (!hasAllowedCat) continue;
+
+                    var cleanDesc = rawDesc.replace(/\s+/g, " ").trim();
+                    if (cleanDesc.length > 100) cleanDesc = cleanDesc.substring(0, 100) + '...';
+                    
+                    var displayDate = rawTime.replace(/(?:, \d{4}| at | \d{1,2}:\d{2}\s*(am|pm|AM|PM)).*/, '').trim() || 'This Wknd';
+                    var displayLoc = rawLoc.split(',')[0].trim();
+
+                    var displayStr = "<span style='color:#6fe3a5;'>" + displayDate + "</span>  |  " + 
+                                     "<span style='font-weight:600;'>" + rawTitle + "</span>  |  " + 
+                                     displayLoc + "  |  " + 
+                                     "<span style='opacity:0.8; font-size: 21px;'>" + cleanDesc + "</span>";
+                    
+                    filteredEvents.push(displayStr);
                 }
 
-                // DIAGNOSTIC 3: Feed works, but filters are too strict!
                 if (filteredEvents.length === 0) {
-                    var diagMsg = "Debug: Fetched " + json.items.length + " items, but 0 passed the weekend/category filters.";
-                    filteredEvents = [diagMsg];
+                    filteredEvents = ["Debug: Scraped site, but 0 events matched the Weekend + Category filters."];
                 }
 
                 var list1 = [], list2 = [], list3 = [];
@@ -778,9 +739,8 @@
                 renderTicker('events-ticker-2', list2, 'Event', 3000, 1000);
                 renderTicker('events-ticker-3', list3, 'Event', 3000, 2000);
             })
-            // DIAGNOSTIC 4: Network/Browser CORS Failures
             .catch(function(err) {
-                var errList = ["Network/CORS Error: " + err.message];
+                var errList = ["Proxy/Scrape Error: " + err.message];
                 renderTicker('events-ticker-1', errList, 'DEBUG', 6000, 0);
                 renderTicker('events-ticker-2', errList, 'DEBUG', 6000, 0);
                 renderTicker('events-ticker-3', errList, 'DEBUG', 6000, 0);
