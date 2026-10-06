@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">  
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Boston North Station Dashboard</title>
@@ -47,6 +47,26 @@
             transition: opacity 1s ease-in-out;
         }
         
+        /* Dev Update Button */
+        .dev-update-btn {
+            position: fixed;
+            bottom: 6px;
+            left: 6px;
+            z-index: 9999;
+            background: rgba(0,0,0,0.3);
+            color: rgba(255,255,255,0.5);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .dev-update-btn:active {
+            background: rgba(255,255,255,0.3);
+            color: #fff;
+        }
+
         /* Pixel Shifting Dashboard Container */
         .dashboard { 
             position: relative; z-index: 2;
@@ -103,9 +123,6 @@
         }
 
         /* MBTA Subway Grid (2x2) */
-        /* iPad Air 1 (iOS 12 Safari) does not support flexbox "gap", so tiles */
-        /* touched with no spacing. CSS grid "gap" has been supported since */
-        /* Safari 10.1, so it renders correctly on this device. */
         .subway-grid { 
             display: -ms-grid;
             display: grid; 
@@ -136,7 +153,7 @@
         .train-row { 
             display: flex; justify-content: center; 
             margin-bottom: 4px; 
-            font-size: 54px; /* 20% larger than the previous 45px size */
+            font-size: 54px; 
         }
         .time-away { font-weight: bold; color: #6fe3a5; text-shadow: 0 2px 5px rgba(0,0,0,0.78); }
         .quad-orange .time-away {color: #f97316;}
@@ -150,7 +167,7 @@
         .header-weather > span { margin-left: 5px; }
         .header-weather > span:first-child { margin-left: 0; }
 
-        /* Compact scrolling headlines beneath the clock/weather header */
+        /* Compact transitioning headlines beneath the clock/weather header */
         .ticker-row {
             width: 100%;
             box-sizing: border-box;
@@ -160,12 +177,11 @@
             margin-bottom: 8px;
         }
         .ticker {
-            display: grid;
-            grid-template-columns: 112px minmax(0, 1fr);
+            display: flex;
             align-items: stretch;
             overflow: hidden;
             width: 100%;
-            min-height: 29px;
+            height: 33px; /* Fixed height to prevent jumping */
             padding: 0;
             box-sizing: border-box;
             border-radius: 8px;
@@ -173,7 +189,6 @@
             border: 1px solid rgba(255,255,255,0.10);
             -webkit-backdrop-filter: blur(7px);
             backdrop-filter: blur(7px);
-            white-space: nowrap;
             position: relative;
         }
         .ticker-label {
@@ -181,6 +196,7 @@
             align-items: center;
             justify-content: flex-start;
             width: 112px;
+            flex-shrink: 0;
             box-sizing: border-box;
             padding: 0 10px;
             font-size: 20px;
@@ -195,675 +211,41 @@
             position: relative;
             z-index: 20;
         }
+        
+        /* New Fade-Transition CSS for tickers */
         .ticker-track {
+            flex-grow: 1;
             min-width: 0;
             overflow: hidden;
             position: relative;
             z-index: 1;
             display: block;
-            padding: 2px 10px;
             box-sizing: border-box;
         }
-        .ticker-track-inner {
-            display: inline-flex;
-            align-items: center;
-            width: max-content;
-            min-width: max-content;
-            transform: translate3d(0,0,0);
-            will-change: transform;
-        }
-        .ticker-segment {
-            display: inline-flex;
-            align-items: center;
-            flex: 0 0 auto;
-            gap: 42px;
-            padding-right: 42px;
-        }
         .ticker-item {
-            display: inline-block;
-            flex: 0 0 auto;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            box-sizing: border-box;
             font-size: 24px;
             line-height: 1.15;
             color: #ffffff;
             text-shadow: 0 3px 8px rgba(0,0,0,0.95);
             white-space: nowrap;
-        }
-        .ticker-news .ticker-label { color: #ffffff; }
-        .ticker-sports .ticker-label { color: #ff8a75; }
-
-        .hw-temp { font-size: 38px; font-weight: 600; color: #ffffff; text-shadow: 0 2px 6px rgba(0,0,0,0.78); }
-        .hw-desc { font-size: 30px; color: #f3f1ec; font-weight: 500; text-shadow: 0 2px 6px rgba(0,0,0,0.78); }
-        .hw-details { font-size: 30px; color: rgba(255,255,255,0.9); font-weight: 500; text-shadow: 0 2px 6px rgba(0,0,0,0.78); }
-
-        /* News Module */
-        .news-container { background: rgba(255,255,255,0.05); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); padding: 8px 14px; border-radius: 14px; box-shadow: 0 4px 14px -4px rgba(0,0,0,0.25); }
-        .news-item { border-bottom: 1px solid rgba(255,255,255,0.18); padding: 6px 8px; font-size: 24px; color: #ffffff; text-shadow: 0 3px 7px rgba(0,0,0,0.88); line-height: 1.25; }
-        .news-item:last-child { border-bottom: none; }
-        .news-rank { font-weight: 700; color: #6fe3a5; margin-right: 6px; text-shadow: 0 2px 5px rgba(0,0,0,0.78); }
-
-        /* Sports Module */
-        .sports-container { background: rgba(255,255,255,0.05); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); padding: 8px 14px; border-radius: 14px; box-shadow: 0 4px 14px -4px rgba(0,0,0,0.25); margin-top: 8px; }
-        .sport-game { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.18); padding: 4px 8px; font-size: 24px; }
-        .sport-game:last-child { border-bottom: none; }
-        .team-name { font-weight: 600; color: #ffffff; text-shadow: 0 3px 7px rgba(0,0,0,0.88); }
-        .game-status { color: rgba(255,255,255,0.9); font-weight: 500; text-shadow: 0 3px 7px rgba(0,0,0,0.78); }
-        .game-live { color: #ff8a75; font-weight: bold; text-shadow: 0 3px 7px rgba(0,0,0,0.88); animation: pulse 2s infinite; }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.6; }
-            100% { opacity: 1; }
-        }
-
-        /* Alerts List */
-        #alerts-container { margin-top: 10px; }
-        .alert-item { 
-            background: rgba(217,83,79,0.25); 
-            -webkit-backdrop-filter: blur(8px);
-            backdrop-filter: blur(8px);
-            border-left: 5px solid #d9534f; 
-            padding: 8px 12px;
-            margin-bottom: 6px; 
-            font-size: 24px; 
-            line-height: 1.3; 
-            border-radius: 8px; 
-            color: #ffffff;
-            text-shadow: 0 2px 5px rgba(0,0,0,0.78);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-        }
-        .alert-good { 
-            background: rgba(43,122,89,0.25); 
-            border-left-color: #2b7a59; 
-            color: #ffffff;
-        }
-
-        /* Periodic photo-only mode: temporarily remove fixed UI so the display can rest. */
-        body.photo-only .dashboard {
+            overflow: hidden;
+            text-overflow: ellipsis; /* Safari-safe truncation for long headlines */
             opacity: 0;
+            transition: opacity 0.6s ease-in-out;
             pointer-events: none;
         }
-        body.photo-only .bg-scrim {
-            opacity: 0.04;
-        }
-        body.photo-only .bg-caption {
+        .ticker-item.active {
             opacity: 1;
         }
-        .dashboard {
-            transition: opacity 1.2s ease-in-out;
-        }
-
-    </style>
-</head>
-<body>
-
-    <div id="bg-layer-1" class="bg-photo is-visible"></div>
-    <div id="bg-layer-2" class="bg-photo"></div>
-    <div class="bg-scrim"></div>
-    <div id="bg-caption" class="bg-caption"></div>
-
-    <div class="dashboard">
-        <div class="header-container">
-            <div id="main-clock" class="header-time">--:--</div>
-            <div class="header-weather" id="header-weather">
-                <span class="hw-temp" id="weather-temp">--°F</span>
-                <span class="hw-desc" id="weather-desc">Loading...</span>
-                <span class="hw-details" id="weather-details">H: --° | L: --° | Rain: --%</span>
-            </div>
-        </div>
-
-        <div class="hello-world">Hello World</div>
-
-        <div class="ticker-row">
-            <div class="ticker ticker-news">
-                <span class="ticker-label">NEWS</span>
-                <div class="ticker-track">
-                    <div class="ticker-track-inner" id="news-ticker">
-                        <span class="ticker-item">Loading Boston headlines...</span>
-                    </div>
-                </div>
-            </div>
-            <div class="ticker ticker-sports">
-                <span class="ticker-label">SPORTS</span>
-                <div class="ticker-track">
-                    <div class="ticker-track-inner" id="sports-ticker">
-                        <span class="ticker-item">Loading sports data...</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="content-row">
-            <!-- Main Area: Subway & Alerts -->
-            <div class="col-left" style="width:100%; padding:0 10px 12px 10px;">
-                <div class="subway-grid">
-                    <!-- Orange Line Southbound -->
-                    <div class="subway-quadrant quad-orange">
-                        <div class="quad-title">Forest Hills</div>
-                        <div id="orange-inbound"><div class="train-row">Loading...</div></div>
-                    </div>
-
-                    <!-- Orange Line Northbound -->
-                    <div class="subway-quadrant quad-orange">
-                        <div class="quad-title">Oak Grove</div>
-                        <div id="orange-outbound"><div class="train-row">Loading...</div></div>
-                    </div>
-
-                    <!-- Green Line Westbound -->
-                    <div class="subway-quadrant quad-green">
-                        <div class="quad-title">Westbound</div>
-                        <div id="green-inbound"><div class="train-row">Loading...</div></div>
-                    </div>
-
-                    <!-- Green Line Eastbound -->
-                    <div class="subway-quadrant quad-green">
-                        <div class="quad-title">Eastbound</div>
-                        <div id="green-outbound"><div class="train-row">Loading...</div></div>
-                    </div>
-                </div>
-
-                <div id="alerts-container">
-                    <div class="alert-item">Checking alerts...</div>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    <script>
-        // --- 0. ROTATING BING "WALLPAPER OF THE DAY" BACKGROUND ---
-        // bing.com's own image-archive endpoint doesn't send CORS headers, so it
-        // can't be fetched directly from a browser. bingw.jasonzeng.dev is a small
-        // public proxy built specifically for this (JSON metadata + hotlinkable
-        // image), built on top of Bing's daily/recent wallpapers.
-        var BING_PROXY = 'https://bingw.jasonzeng.dev/';
-        var bingImages = []; // { url, caption }
-        var bgIndex = -1;
-        var bgShowingLayer1 = true;
-
-        function fetchBingDay(index) {
-            return fetch(BING_PROXY + '?resolution=1920x1080&index=' + index + '&format=json', { cache: 'no-store' })
-                .then(function(res) { return res.json(); })
-                .then(function(data) {
-                    return { url: data.url, caption: (data.title ? data.title + ' — ' : '') + data.copyright };
-                })
-                .catch(function() { return null; });
-        }
-
-        function preloadAndSwap(entry) {
-            var img = new Image();
-            img.onload = function() {
-                var showEl = document.getElementById(bgShowingLayer1 ? 'bg-layer-2' : 'bg-layer-1');
-                var hideEl = document.getElementById(bgShowingLayer1 ? 'bg-layer-1' : 'bg-layer-2');
-                showEl.style.backgroundImage = 'url(' + entry.url + ')';
-                showEl.classList.add('is-visible');
-                hideEl.classList.remove('is-visible');
-                bgShowingLayer1 = !bgShowingLayer1;
-
-                var captionEl = document.getElementById('bg-caption');
-                captionEl.style.opacity = 0;
-                setTimeout(function() {
-                    captionEl.innerText = entry.caption || '';
-                    captionEl.style.opacity = 1;
-                }, 300);
-            };
-            img.src = entry.url;
-        }
-
-        function rotateBackground() {
-            if (bingImages.length === 0) return;
-            bgIndex = (bgIndex + 1) % bingImages.length;
-            preloadAndSwap(bingImages[bgIndex]);
-        }
-
-        // Grab today's photo plus the last several days, so there's a real
-        // rotation instead of showing one static image on loop.
-        Promise.all([0, 1, 2, 3, 4, 5].map(fetchBingDay))
-        .then(function(results) {
-            bingImages = results.filter(function(r) { return r && r.url; });
-            if (bingImages.length > 0) {
-                rotateBackground();
-                setInterval(rotateBackground, 60000); // every 3 minutes
-            }
-        });
-
-
-        // --- 1. CLOCK ---
-        function updateClock() {
-            var now = new Date();
-            var timeString = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-            document.getElementById('main-clock').innerText = timeString;
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
-
-
-        // --- 2. MBTA SUBWAY LOGIC ---
-        function syncSubwayTileSizes() {
-            var tiles = document.querySelectorAll('.subway-quadrant');
-            if (!tiles.length) return;
-
-            // Clear previous sizing before measuring the natural content size.
-            for (var i = 0; i < tiles.length; i++) {
-                tiles[i].style.width = 'max-content';
-                tiles[i].style.height = 'auto';
-            }
-
-            var maxWidth = 0;
-            var maxHeight = 0;
-            for (var j = 0; j < tiles.length; j++) {
-                var rect = tiles[j].getBoundingClientRect();
-                if (rect.width > maxWidth) maxWidth = rect.width;
-                if (rect.height > maxHeight) maxHeight = rect.height;
-            }
-
-            maxWidth = Math.ceil(maxWidth);
-            maxHeight = Math.ceil(maxHeight);
-
-            // Force the GRID COLUMNS themselves to the same measured width.
-            // This prevents Safari/iPad from re-expanding each column based on
-            // its own intrinsic content, which was causing visibly different
-            // tile lengths.
-            var grid = document.querySelector('.subway-grid');
-            if (grid) {
-                grid.style.gridTemplateColumns = maxWidth + 'px ' + maxWidth + 'px';
-            }
-
-            for (var k = 0; k < tiles.length; k++) {
-                tiles[k].style.width = maxWidth + 'px';
-                tiles[k].style.height = maxHeight + 'px';
-            }
-        }
-
-        function fetchSubway() {
-            var url = 'https://api-v3.mbta.com/predictions?filter[stop]=place-north&include=route,trip';
-            
-            fetch(url, { cache: 'no-store' })
-            .then(function(res) { return res.json(); })
-            .then(function(json) {
-                if (!json.data || json.data.length === 0) return;
-
-                var orangeIn = [], orangeOut = [], greenIn = [], greenOut = [];
-                var seenTrips = {};
-
-                var sortedData = json.data.sort(function(a, b) {
-                    var tA = a.attributes.departure_time || a.attributes.arrival_time;
-                    var tB = b.attributes.departure_time || b.attributes.arrival_time;
-                    if (!tA && !tB) return 0; 
-                    if (!tA) return 1;
-                    if (!tB) return -1;
-                    return new Date(tA).getTime() - new Date(tB).getTime();
-                });
-
-                for (var i = 0; i < sortedData.length; i++) {
-                    var p = sortedData[i];
-                    var routeData = p.relationships && p.relationships.route && p.relationships.route.data;
-                    if (!routeData) continue;
-
-                    var isOrange = routeData.id === 'Orange';
-                    var isGreen = routeData.id.indexOf('Green') !== -1;
-                    if (!isOrange && !isGreen) continue;
-
-                    var tripData = p.relationships && p.relationships.trip && p.relationships.trip.data;
-                    var tripId = tripData ? tripData.id : null;
-                    if (tripId) {
-                        if (seenTrips[tripId]) continue;
-                        seenTrips[tripId] = true;
-                    }
-
-                    var direction = p.attributes.direction_id; 
-                    var targetTime = p.attributes.departure_time || p.attributes.arrival_time;
-                    
-                    if (targetTime) {
-                        var diffMs = new Date(targetTime).getTime() - new Date().getTime();
-                        var diffMins = Math.floor(diffMs / 60000);
-                        if (diffMins < -1) continue; 
-                        
-                        var timeVal = diffMins <= 0 ? 'BRD' : diffMins;
-
-                        if (isOrange && direction === 0) orangeIn.push(timeVal);
-                        if (isOrange && direction === 1) orangeOut.push(timeVal);
-                        if (isGreen && direction === 0) greenIn.push(timeVal);
-                        if (isGreen && direction === 1) greenOut.push(timeVal);
-                    }
-                }
-
-                function renderQuad(id, arr) {
-                    var el = document.getElementById(id);
-                    if (arr.length === 0) {
-                        el.innerHTML = '<div class="train-row">No trains</div>';
-                        return;
-                    }
-                    
-                    var sliced = arr.slice(0, 3);
-                    var hasNumber = false;
-                    for(var k=0; k<sliced.length; k++) {
-                        if (sliced[k] !== 'BRD') hasNumber = true;
-                    }
-                    
-                    var displayString = sliced.join(', ');
-                    if (hasNumber) displayString += ' min';
-
-                    el.innerHTML = '<div class="train-row"><span class="time-away">' + displayString + '</span></div>';
-                }
-
-                renderQuad('orange-inbound', orangeIn);
-                renderQuad('orange-outbound', orangeOut);
-                renderQuad('green-inbound', greenIn);
-                renderQuad('green-outbound', greenOut);
-            })
-            .catch(function(err) { console.error('MBTA Fetch Error:', err); });
-        }
-
-
-        // --- 3. MBTA SERVICE ALERTS ---
-        function fetchAlerts() {
-            var url = 'https://api-v3.mbta.com/alerts?filter[stop]=place-north&filter[route_type]=0,1';
-            fetch(url, { cache: 'no-store' })
-            .then(function(res) { return res.json(); })
-            .then(function(json) {
-                var container = document.getElementById('alerts-container');
-                if (!json.data || json.data.length === 0) {
-                    container.innerHTML = '<div class="alert-item alert-good">All clear. No active subway alerts.</div>';
-                    return;
-                }
-                var html = '';
-                for (var i = 0; i < json.data.length; i++) {
-                    var alertText = json.data[i].attributes.short_header || json.data[i].attributes.header || 'Active service alert.';
-                    html += '<div class="alert-item">' + alertText + '</div>';
-                }
-                container.innerHTML = html;
-            });
-        }
-
-
-        // --- 4. WEATHER ---
-        function fetchWeather() {
-            var url = 'https://api.open-meteo.com/v1/forecast?latitude=42.3601&longitude=-71.0589&current_weather=true&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&timezone=America%2FNew_York';
-            fetch(url, { cache: 'no-store' })
-            .then(function(res) { return res.json(); })
-            .then(function(data) {
-                if (data.current_weather) {
-                    document.getElementById('weather-temp').innerText = Math.round(data.current_weather.temperature) + '°F';
-                    var code = data.current_weather.weathercode;
-                    var desc = 'Clear';
-                    if (code >= 1 && code <= 3) desc = 'Partly Cloudy';
-                    if (code == 45 || code == 48) desc = 'Fog';
-                    if (code >= 51 && code <= 55) desc = 'Drizzle';
-                    if (code >= 61 && code <= 65) desc = 'Rain';
-                    if (code >= 71 && code <= 75) desc = 'Snow';
-                    if (code >= 95) desc = 'Thunderstorm';
-                    document.getElementById('weather-desc').innerText = desc;
-                }
-                if (data.daily) {
-                    var high = Math.round(data.daily.temperature_2m_max[0]);
-                    var low = Math.round(data.daily.temperature_2m_min[0]);
-                    var rainChance = data.daily.precipitation_probability_max[0] || 0;
-                    
-                    document.getElementById('weather-details').innerText = 
-                        'H: ' + high + '° | L: ' + low + '° | Rain: ' + rainChance + '%';
-                }
-            });
-        }
-
-
-        // --- TICKER RENDERING (iPad-safe) ---
-        var tickerAnimators = {};
-
-        function renderTicker(id, items) {
-            var container = document.getElementById(id);
-            if (!container) return;
-
-            if (!items || items.length === 0) items = ['No information available.'];
-
-            var segmentHtml = '';
-            for (var i = 0; i < items.length; i++) {
-                segmentHtml += '<span class="ticker-item">' + items[i] + '</span>';
-            }
-
-            container.innerHTML = '<div class="ticker-segment">' + segmentHtml + '</div>' +
-                                  '<div class="ticker-segment">' + segmentHtml + '</div>';
-
-            setupTickerAnimation(id);
-        }
-
-        function setupTickerAnimation(id) {
-            if (tickerAnimators[id]) {
-                tickerAnimators[id].stop = true;
-            }
-
-            var container = document.getElementById(id);
-            if (!container) return;
-            var track = container.parentElement;
-            var segments = container.querySelectorAll('.ticker-segment');
-            if (!segments || segments.length < 2) return;
-
-            // Let Safari finish layout before measuring.
-            window.setTimeout(function() {
-                var first = segments[0];
-                var distance = first.getBoundingClientRect().width;
-                if (!distance || distance <= track.clientWidth) {
-                    container.style.transform = 'translate3d(0,0,0)';
-                    return;
-                }
-
-                var state = { stop: false };
-                tickerAnimators[id] = state;
-                var position = 0;
-                var last = Date.now();
-                var speed = 42; // pixels per second; smooth but clearly readable
-
-                function step() {
-                    if (state.stop) return;
-                    var now = Date.now();
-                    var elapsed = Math.min(now - last, 80);
-                    last = now;
-                    position -= speed * elapsed / 1000;
-                    if (position <= -distance) position += distance;
-                    container.style.transform = 'translate3d(' + position.toFixed(2) + 'px,0,0)';
-                    window.requestAnimationFrame(step);
-                }
-                window.requestAnimationFrame(step);
-            }, 60);
-        }
-
-        window.addEventListener('resize', function() {
-            setupTickerAnimation('news-ticker');
-            setupTickerAnimation('sports-ticker');
-        });
-
-
-        // --- 5. SPORTS ---
-        function fetchSports() {
-            function getFormatDate(offsetDays) {
-                var d = new Date();
-                d.setDate(d.getDate() + offsetDays);
-                var yy = d.getFullYear();
-                var mm = ('0' + (d.getMonth() + 1)).slice(-2);
-                var dd = ('0' + d.getDate()).slice(-2);
-                return yy + mm + dd;
-            }
-
-            // Tighter 3-day window: Yesterday through Tomorrow
-            var dateRange = getFormatDate(-1) + '-' + getFormatDate(2);
-
-            var urls = [
-                'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=' + dateRange,
-                'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=' + dateRange,
-                'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=' + dateRange,
-                'https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard?dates=' + dateRange
-            ];
-
-            var myTeams = ['Boston Red Sox', 'Washington Nationals', 'Washington Commanders', 'Boston Celtics', 'Duke Blue Devils'];
-            var allGames = [];
-
-            Promise.all(urls.map(function(u) {
-                return fetch(u, {cache: 'no-store'}).then(function(res) { return res.json(); }).catch(function(){ return {events:[]}; });
-            }))
-            .then(function(results) {
-                results.forEach(function(league) {
-                    if (league.events) allGames = allGames.concat(league.events);
-                });
-
-                var html = '';
-                var gamesFound = 0;
-                var pastGamesPerTeam = {}; 
-                var futureGamesPerTeam = {}; 
-
-                allGames.sort(function(a,b) { return new Date(a.date).getTime() - new Date(b.date).getTime(); });
-
-                for (var i = 0; i < allGames.length; i++) {
-                    var game = allGames[i];
-                    var comp = game.competitions[0];
-                    var homeTeam = comp.competitors[0];
-                    var awayTeam = comp.competitors[1];
-
-                    var matchedTeams = [];
-                    if (myTeams.indexOf(homeTeam.team.displayName) !== -1) matchedTeams.push(homeTeam.team.displayName);
-                    if (myTeams.indexOf(awayTeam.team.displayName) !== -1) matchedTeams.push(awayTeam.team.displayName);
-
-                    if (matchedTeams.length === 0) continue;
-
-                    var status = game.status.type;
-                    var isFinal = (status.name === 'STATUS_FINAL');
-                    var isLive = (status.state === 'in');
-
-                    var shouldShow = false;
-                    for (var m = 0; m < matchedTeams.length; m++) {
-                        var tName = matchedTeams[m];
-                        if (isFinal) {
-                            if (!pastGamesPerTeam[tName]) { pastGamesPerTeam[tName] = true; shouldShow = true; }
-                        } else if (isLive) {
-                            shouldShow = true; // Always show active games
-                        } else {
-                            if (!futureGamesPerTeam[tName]) { futureGamesPerTeam[tName] = true; shouldShow = true; }
-                        }
-                    }
-
-                    if (!shouldShow) continue;
-
-                    gamesFound++;
-                    var vsText = (awayTeam.team.shortDisplayName || awayTeam.team.name) + '&nbsp; @ &nbsp;' + (homeTeam.team.shortDisplayName || homeTeam.team.name);
-                    var statusHtml = '';
-
-                    if (isFinal) {
-                        statusHtml = '&nbsp;' + awayTeam.score + ' - ' + (homeTeam.score || '0');
-                    } else if (isLive) {
-                        statusHtml = '<span class="game-live">&nbsp;' + awayTeam.score + ' - ' + homeTeam.score + '</span>'; 
-                    } else {
-                        var gDate = new Date(game.date);
-                        var dayStr = gDate.toLocaleDateString('en-US', { weekday: 'short' });
-                        var timeStr = gDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-                        statusHtml = dayStr + '&nbsp;&nbsp;' + timeStr;
-                    }
-
-                    html += '<div class="sport-game">';
-                    html += '<span class="team-name">' + vsText + '</span>';
-                    html += '<span class="game-status">' + statusHtml + '</span>';
-                    html += '</div>';
-                }
-
-                if (gamesFound === 0) {
-                    renderTicker('sports-ticker', ['No recent or upcoming games found.']);
-                } else {
-                    var temp = document.createElement('div');
-                    temp.innerHTML = html;
-                    var nodes = temp.querySelectorAll('.sport-game');
-                    var items = [];
-                    for (var s = 0; s < nodes.length; s++) {
-                        var sportText = nodes[s].textContent.replace(/\s+/g, ' ').trim();
-                        items.push(sportText);
-                    }
-                    renderTicker('sports-ticker', items);
-                }
-            });
-        }
-
-
-        // --- 5b. LOCAL BOSTON NEWS ---
-        function fetchNews() {
-            // WBUR's current /news/feed endpoint is a feed landing page rather than
-            // a reliable story RSS stream. Use Google News' RSS search for WBUR news
-            // and keep rss2json only as the RSS->JSON compatibility bridge.
-            var rss = 'https://news.google.com/rss/search?q=site%3Awbur.org%2Fnews&hl=en-US&gl=US&ceid=US%3Aen';
-            var url = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rss);
-
-            fetch(url, { cache: 'no-store' })
-            .then(function(res) { return res.json(); })
-            .then(function(json) {
-                if (json.status !== 'ok' || !json.items || json.items.length === 0) {
-                    renderTicker('news-ticker', ['No headlines available.']);
-                    return;
-                }
-
-                var top3 = json.items.slice(0, 3);
-                var items = [];
-                for (var i = 0; i < top3.length; i++) {
-                    items.push(top3[i].title);
-                }
-                renderTicker('news-ticker', items);
-            });
-        }
-
-
-        // --- 6. PHOTO-ONLY REST PERIOD / TOUCH TO RETURN ---
-        // Every 2 hours, hide the static dashboard for 45 seconds. A tap immediately
-        // restores the dashboard, which is convenient on an always-on iPad display.
-        var PHOTO_ONLY_AFTER_MS = 2 * 60 * 60 * 1000;
-        var PHOTO_ONLY_DURATION_MS = 45 * 1000;
-        var photoOnlyTimer = null;
-        var photoOnlyExitTimer = null;
-
-        function exitPhotoOnlyMode() {
-            if (!document.body.classList.contains('photo-only')) return;
-            document.body.classList.remove('photo-only');
-            if (photoOnlyExitTimer) {
-                clearTimeout(photoOnlyExitTimer);
-                photoOnlyExitTimer = null;
-            }
-            schedulePhotoOnlyMode();
-        }
-
-        function enterPhotoOnlyMode() {
-            document.body.classList.add('photo-only');
-            photoOnlyExitTimer = setTimeout(exitPhotoOnlyMode, PHOTO_ONLY_DURATION_MS);
-        }
-
-        function schedulePhotoOnlyMode() {
-            if (photoOnlyTimer) clearTimeout(photoOnlyTimer);
-            photoOnlyTimer = setTimeout(enterPhotoOnlyMode, PHOTO_ONLY_AFTER_MS);
-        }
-
-        // touchend is used for iPad Safari; click is retained as a desktop fallback.
-        document.addEventListener('touchend', function() {
-            exitPhotoOnlyMode();
-        }, false);
-
-        document.addEventListener('click', function() {
-            exitPhotoOnlyMode();
-        }, false);
-
-        schedulePhotoOnlyMode();
-
-
-        // --- 6. TIMERS & INITIALIZATION ---
-        // Weather and news refresh twice per day (every 12 hours).
-        function updateFastData() {
-            fetchSubway();
-            fetchAlerts();
-            fetchSports();
-        }
         
-        function updateSlowData() {
-            fetchWeather();
-            fetchNews();
-        }
-
-        updateFastData();
-        updateSlowData();
-
-        setInterval(updateFastData, 60000);
-        setInterval(updateSlowData, 12 * 60 * 60 * 1000);
-
-    </script>
-</body>
-</html>
+        .ticker-news .ticker-label { color: #ffffff; }
+        .ticker-sports .ticker-label { color: #ff8a7
