@@ -656,7 +656,6 @@
                     renderTicker('sports-ticker', ['No recent or upcoming games found.'], 'Sports', 6000, 0);
                 } else {
                     var items = html.split('|||').filter(Boolean);
-                    // Sports rotates every 6 seconds
                     renderTicker('sports-ticker', items, 'Sports', 6000, 0);
                 }
             });
@@ -669,88 +668,101 @@
             var url = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rss);
 
             fetch(url, { cache: 'no-store' })
-            .then(function(res) { return res.json(); })
+            .then(function(res) { 
+                if (!res.ok) throw new Error("HTTP " + res.status);
+                return res.json(); 
+            })
             .then(function(json) {
-                if (!json || json.status !== 'ok' || !json.items) return;
+                // DIAGNOSTIC 1: API Service Errors (e.g., rss2json rate limits)
+                if (!json || json.status !== 'ok' || !json.items) {
+                    var errorMsg = (json && json.message) ? json.message : "Invalid feed data returned.";
+                    var errList = ["API Error: " + errorMsg];
+                    renderTicker('events-ticker-1', errList, 'DEBUG', 6000, 0);
+                    renderTicker('events-ticker-2', errList, 'DEBUG', 6000, 0);
+                    renderTicker('events-ticker-3', errList, 'DEBUG', 6000, 0);
+                    return;
+                }
                 
                 var allowedCategories = ['art', 'date idea', 'festival', 'fair', 'food', 'music', 'seasonal'];
                 var filteredEvents = [];
 
-                for (var i = 0; i < json.items.length; i++) {
-                    var item = json.items[i];
-                    var cats = item.categories || [];
-                    var catsLower = cats.map(function(c) { return c.toLowerCase(); });
-                    
-                    // Exclude recurring / ongoing events
-                    var isRecurring = false;
-                    for (var c=0; c<catsLower.length; c++) {
-                        if (catsLower[c].indexOf('recurring') !== -1 || catsLower[c].indexOf('ongoing') !== -1) {
-                            isRecurring = true;
-                        }
-                    }
-                    var rawTitle = item.title || '';
-                    var rawDesc = item.description || '';
-                    if (/recurring|ongoing/i.test(rawTitle) || /recurring|ongoing/i.test(rawDesc)) {
-                        isRecurring = true;
-                    }
-                    if (isRecurring) continue;
-
-                    // Parse Date and Location out of HTML payload
-                    var whenMatch = rawDesc.match(/When:.*?<\/strong>\s*(.*?)(?:<br|<\/p)/i);
-                    var whereMatch = rawDesc.match(/Where:.*?<\/strong>\s*(.*?)(?:<br|<\/p)/i);
-                    var whenText = whenMatch ? whenMatch[1].replace(/(<([^>]+)>)/gi, "").trim() : '';
-                    var whereText = whereMatch ? whereMatch[1].replace(/(<([^>]+)>)/gi, "").trim() : '';
-
-                    // Validate it's a weekend event
-                    var isWeekend = /Friday|Saturday|Sunday|Fri|Sat|Sun/i.test(whenText) || /Friday|Saturday|Sunday/i.test(rawTitle);
-                    if (!isWeekend) continue;
-
-                    // Must be in one of the approved categories
-                    var hasAllowedCat = false;
-                    for (var c=0; c<catsLower.length; c++) {
-                        for (var ac=0; ac<allowedCategories.length; ac++) {
-                            if (catsLower[c].indexOf(allowedCategories[ac]) !== -1) hasAllowedCat = true;
-                        }
-                    }
-                    
-                    // Fallback to text search if no official tag was provided
-                    if (!hasAllowedCat) {
-                        var descLower = rawDesc.toLowerCase();
-                        var titleLower = rawTitle.toLowerCase();
-                        for (var ac=0; ac<allowedCategories.length; ac++) {
-                            if (descLower.indexOf(allowedCategories[ac]) !== -1 || titleLower.indexOf(allowedCategories[ac]) !== -1) {
-                                hasAllowedCat = true; break;
+                // DIAGNOSTIC 2: Catch Javascript parsing errors
+                try {
+                    for (var i = 0; i < json.items.length; i++) {
+                        var item = json.items[i];
+                        var cats = item.categories || [];
+                        var catsLower = cats.map(function(c) { return c.toLowerCase(); });
+                        
+                        var isRecurring = false;
+                        for (var c=0; c<catsLower.length; c++) {
+                            if (catsLower[c].indexOf('recurring') !== -1 || catsLower[c].indexOf('ongoing') !== -1) {
+                                isRecurring = true;
                             }
                         }
+                        var rawTitle = item.title || '';
+                        var rawDesc = item.description || '';
+                        if (/recurring|ongoing/i.test(rawTitle) || /recurring|ongoing/i.test(rawDesc)) {
+                            isRecurring = true;
+                        }
+                        if (isRecurring) continue;
+
+                        var whenMatch = rawDesc.match(/When:.*?<\/strong>\s*(.*?)(?:<br|<\/p)/i);
+                        var whereMatch = rawDesc.match(/Where:.*?<\/strong>\s*(.*?)(?:<br|<\/p)/i);
+                        var whenText = whenMatch ? whenMatch[1].replace(/(<([^>]+)>)/gi, "").trim() : '';
+                        var whereText = whereMatch ? whereMatch[1].replace(/(<([^>]+)>)/gi, "").trim() : '';
+
+                        var isWeekend = /Friday|Saturday|Sunday|Fri|Sat|Sun/i.test(whenText) || /Friday|Saturday|Sunday/i.test(rawTitle);
+                        if (!isWeekend) continue;
+
+                        var hasAllowedCat = false;
+                        for (var c=0; c<catsLower.length; c++) {
+                            for (var ac=0; ac<allowedCategories.length; ac++) {
+                                if (catsLower[c].indexOf(allowedCategories[ac]) !== -1) hasAllowedCat = true;
+                            }
+                        }
+                        
+                        if (!hasAllowedCat) {
+                            var descLower = rawDesc.toLowerCase();
+                            var titleLower = rawTitle.toLowerCase();
+                            for (var ac=0; ac<allowedCategories.length; ac++) {
+                                if (descLower.indexOf(allowedCategories[ac]) !== -1 || titleLower.indexOf(allowedCategories[ac]) !== -1) {
+                                    hasAllowedCat = true; break;
+                                }
+                            }
+                        }
+                        if (!hasAllowedCat) continue;
+
+                        var cleanDesc = rawDesc.replace(/<p><strong>(When|Where):.*?<\/p>/gi, '')
+                                               .replace(/(<([^>]+)>)/gi, "")
+                                               .replace(/\s+/g, " ")
+                                               .trim();
+                        
+                        if (cleanDesc.length > 150) cleanDesc = cleanDesc.substring(0, 150) + '...';
+
+                        var displayDate = whenText ? whenText.replace(/(?:, \d{4}| at | \d{1,2}:\d{2}\s*(am|pm|AM|PM)).*/, '').trim() : 'This Wknd';
+                        var displayLoc = whereText ? whereText.split(',')[0].trim() : 'Boston';
+
+                        var displayStr = "<span style='color:#6fe3a5;'>" + displayDate + "</span>  |  " + 
+                                         "<span style='font-weight:600;'>" + rawTitle + "</span>  |  " + 
+                                         displayLoc + "  |  " + 
+                                         "<span style='opacity:0.8; font-size: 21px;'>" + cleanDesc + "</span>";
+                        
+                        filteredEvents.push(displayStr);
                     }
-                    if (!hasAllowedCat) continue;
-
-                    // Strip HTML completely for remaining space description
-                    var cleanDesc = rawDesc.replace(/<p><strong>(When|Where):.*?<\/p>/gi, '')
-                                           .replace(/(<([^>]+)>)/gi, "")
-                                           .replace(/\s+/g, " ")
-                                           .trim();
-                    
-                    if (cleanDesc.length > 150) cleanDesc = cleanDesc.substring(0, 150) + '...';
-
-                    // Formatting visual elements cleanly
-                    var displayDate = whenText ? whenText.replace(/(?:, \d{4}| at | \d{1,2}:\d{2}\s*(am|pm|AM|PM)).*/, '').trim() : 'This Wknd';
-                    var displayLoc = whereText ? whereText.split(',')[0].trim() : 'Boston';
-
-                    // Using span tags for formatting Data inside the event text
-                    var displayStr = "<span style='color:#6fe3a5;'>" + displayDate + "</span>  |  " + 
-                                     "<span style='font-weight:600;'>" + rawTitle + "</span>  |  " + 
-                                     displayLoc + "  |  " + 
-                                     "<span style='opacity:0.8; font-size: 21px;'>" + cleanDesc + "</span>";
-                    
-                    filteredEvents.push(displayStr);
+                } catch(e) {
+                    var errList = ["Parsing Error: " + e.message];
+                    renderTicker('events-ticker-1', errList, 'DEBUG', 6000, 0);
+                    renderTicker('events-ticker-2', errList, 'DEBUG', 6000, 0);
+                    renderTicker('events-ticker-3', errList, 'DEBUG', 6000, 0);
+                    return;
                 }
 
+                // DIAGNOSTIC 3: Feed works, but filters are too strict!
                 if (filteredEvents.length === 0) {
-                    filteredEvents = ["No matching weekend events found in selected categories."];
+                    var diagMsg = "Debug: Fetched " + json.items.length + " items, but 0 passed the weekend/category filters.";
+                    filteredEvents = [diagMsg];
                 }
 
-                // Distribute items across the 3 event lists
                 var list1 = [], list2 = [], list3 = [];
                 for (var j = 0; j < filteredEvents.length; j++) {
                     if (j % 3 === 0) list1.push(filteredEvents[j]);
@@ -758,15 +770,20 @@
                     else list3.push(filteredEvents[j]);
                 }
                 
-                // Keep bars rotating if data is scarce
                 if (list1.length === 0) list1 = filteredEvents;
                 if (list2.length === 0) list2 = filteredEvents;
                 if (list3.length === 0) list3 = filteredEvents;
 
-                // All 3 event bars rotate every 3000ms, but staggered by 1000ms so they do a nice "wave" cascade
                 renderTicker('events-ticker-1', list1, 'Event', 3000, 0);
                 renderTicker('events-ticker-2', list2, 'Event', 3000, 1000);
                 renderTicker('events-ticker-3', list3, 'Event', 3000, 2000);
+            })
+            // DIAGNOSTIC 4: Network/Browser CORS Failures
+            .catch(function(err) {
+                var errList = ["Network/CORS Error: " + err.message];
+                renderTicker('events-ticker-1', errList, 'DEBUG', 6000, 0);
+                renderTicker('events-ticker-2', errList, 'DEBUG', 6000, 0);
+                renderTicker('events-ticker-3', errList, 'DEBUG', 6000, 0);
             });
         }
 
