@@ -664,22 +664,27 @@
 
         // --- 8. LOCAL BOSTON EVENTS (Direct HTML Scrape) ---
         function fetchEvents() {
-            var targetUrl = 'https://www.thebostoncalendar.com/events';
-            var proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl);
+            // Using your specific filters, but removed the hardcoded Oct 10 2026 date 
+            // so the dashboard always rolls forward to the current/upcoming weekend.
+            var targetUrl = 'https://www.thebostoncalendar.com/events?tags%5B%5D=Art&tags%5B%5D=Date%20Idea&tags%5B%5D=Festivals%20%26%20Fairs&tags%5B%5D=Food&tags%5B%5D=Music&tags%5B%5D=Seasonal&weekend=1';
+            
+            // corsproxy.io is much friendlier to GitHub Pages and older Safari
+            // Fallback alternative if needed: 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(targetUrl)
+            var proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
 
             fetch(proxyUrl, { cache: 'no-store' })
             .then(function(res) { 
                 if (!res.ok) throw new Error("HTTP " + res.status);
-                return res.json(); 
+                // corsproxy returns the raw HTML string, not a JSON object
+                return res.text(); 
             })
-            .then(function(data) {
-                if (!data || !data.contents) throw new Error("No HTML data returned");
+            .then(function(htmlText) {
+                if (!htmlText) throw new Error("No HTML data returned");
 
                 var parser = new DOMParser();
-                var doc = parser.parseFromString(data.contents, "text/html");
+                var doc = parser.parseFromString(htmlText, "text/html");
                 
                 var eventNodes = doc.querySelectorAll('li.event');
-                var allowedCategories = ['art', 'date idea', 'festival', 'fair', 'food', 'music', 'seasonal'];
                 var filteredEvents = [];
 
                 for (var i = 0; i < eventNodes.length; i++) {
@@ -688,23 +693,11 @@
                     var rawTitle = node.querySelector('h3') ? node.querySelector('h3').textContent.trim() : '';
                     var rawTime = node.querySelector('.time') ? node.querySelector('.time').textContent.replace(/\s+/g, ' ').trim() : '';
                     var rawLoc = node.querySelector('.location') ? node.querySelector('.location').textContent.trim() : 'Boston';
-                    var rawCats = node.querySelector('.tags') ? node.querySelector('.tags').textContent.toLowerCase() : '';
                     var rawDesc = node.querySelector('.description') ? node.querySelector('.description').textContent.trim() : '';
                     
-                    var isRecurring = /recurring|ongoing|every/i.test(rawTitle) || /recurring|ongoing|every/i.test(rawDesc) || rawCats.indexOf('recurring') !== -1;
+                    // The URL already filters for weekends and tags. We just need to exclude recurring/ongoing.
+                    var isRecurring = /recurring|ongoing|every/i.test(rawTitle) || /recurring|ongoing|every/i.test(rawDesc);
                     if (isRecurring) continue;
-
-                    var isWeekend = /Friday|Saturday|Sunday|Fri|Sat|Sun/i.test(rawTime) || /Friday|Saturday|Sunday/i.test(rawTitle);
-                    if (!isWeekend) continue;
-
-                    var hasAllowedCat = false;
-                    for (var ac = 0; ac < allowedCategories.length; ac++) {
-                        if (rawCats.indexOf(allowedCategories[ac]) !== -1 || rawDesc.toLowerCase().indexOf(allowedCategories[ac]) !== -1) {
-                            hasAllowedCat = true; 
-                            break;
-                        }
-                    }
-                    if (!hasAllowedCat) continue;
 
                     var cleanDesc = rawDesc.replace(/\s+/g, " ").trim();
                     if (cleanDesc.length > 100) cleanDesc = cleanDesc.substring(0, 100) + '...';
@@ -721,7 +714,7 @@
                 }
 
                 if (filteredEvents.length === 0) {
-                    filteredEvents = ["Debug: Scraped site, but 0 events matched the Weekend + Category filters."];
+                    filteredEvents = ["No upcoming events matched your weekend filters."];
                 }
 
                 var list1 = [], list2 = [], list3 = [];
@@ -740,7 +733,7 @@
                 renderTicker('events-ticker-3', list3, 'Event', 3000, 2000);
             })
             .catch(function(err) {
-                var errList = ["Proxy/Scrape Error: " + err.message];
+                var errList = ["Event fetch error: " + err.message];
                 renderTicker('events-ticker-1', errList, 'DEBUG', 6000, 0);
                 renderTicker('events-ticker-2', errList, 'DEBUG', 6000, 0);
                 renderTicker('events-ticker-3', errList, 'DEBUG', 6000, 0);
