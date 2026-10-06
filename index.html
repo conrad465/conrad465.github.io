@@ -191,28 +191,7 @@
             backdrop-filter: blur(7px);
             position: relative;
         }
-        .ticker-label {
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            width: 112px;
-            flex-shrink: 0;
-            box-sizing: border-box;
-            padding: 0 10px;
-            font-size: 20px;
-            font-weight: 800;
-            letter-spacing: 0.4px;
-            text-transform: uppercase;
-            background: rgba(25,25,23,0.96);
-            border-right: 1px solid rgba(255,255,255,0.12);
-            -webkit-backdrop-filter: blur(7px);
-            backdrop-filter: blur(7px);
-            text-shadow: 0 2px 6px rgba(0,0,0,0.9);
-            position: relative;
-            z-index: 20;
-        }
         
-        /* New Fade-Transition CSS for tickers */
         .ticker-track {
             flex-grow: 1;
             min-width: 0;
@@ -230,7 +209,7 @@
             height: 100%;
             display: flex;
             align-items: center;
-            padding: 0 12px;
+            padding: 0 14px;
             box-sizing: border-box;
             font-size: 24px;
             line-height: 1.15;
@@ -246,9 +225,10 @@
         .ticker-item.active {
             opacity: 1;
         }
-        
-        .ticker-news .ticker-label { color: #ffffff; }
-        .ticker-sports .ticker-label { color: #ff8a75; }
+
+        /* Inline prefixes */
+        .prefix-news { font-weight: 800; color: #ffffff; margin-right: 6px; }
+        .prefix-sports { font-weight: 800; color: #ff8a75; margin-right: 6px; }
 
         .hw-temp { font-size: 38px; font-weight: 600; color: #ffffff; text-shadow: 0 2px 6px rgba(0,0,0,0.78); }
         .hw-desc { font-size: 30px; color: #f3f1ec; font-weight: 500; text-shadow: 0 2px 6px rgba(0,0,0,0.78); }
@@ -309,13 +289,11 @@
 
         <div class="ticker-row">
             <div class="ticker ticker-news">
-                <span class="ticker-label">NEWS</span>
                 <div class="ticker-track" id="news-ticker">
                     <span class="ticker-item active">Loading Boston headlines...</span>
                 </div>
             </div>
             <div class="ticker ticker-sports">
-                <span class="ticker-label">SPORTS</span>
                 <div class="ticker-track" id="sports-ticker">
                     <span class="ticker-item active">Loading sports data...</span>
                 </div>
@@ -360,14 +338,10 @@
 
     <script>
         // --- 0. HARD REFRESH & MEMORY CLEAR ---
-        // Automatically hard reloads the dashboard every 12 hours. 
-        // This flawlessly fetches new source code and completely dumps memory from old rotating photos.
         function performHardUpdate() {
             window.location.reload(true);
         }
         setTimeout(performHardUpdate, 12 * 60 * 60 * 1000); 
-
-        // Dev Button Click
         document.getElementById('dev-update-btn').addEventListener('click', performHardUpdate);
 
 
@@ -564,22 +538,27 @@
         }
 
 
-        // --- 6. TICKER CYCLING (Simple Fade - Replaces Complex Scrolling) ---
+        // --- 6. TICKER CYCLING ---
         var tickerIntervals = {};
 
-        function renderTicker(id, items) {
+        function renderTicker(id, items, prefix) {
             var container = document.getElementById(id);
             if (!container) return;
 
             if (!items || items.length === 0) items = ['No information available.'];
 
             var html = '';
+            var prefixClass = id === 'news-ticker' ? 'prefix-news' : 'prefix-sports';
+            
             for (var i = 0; i < items.length; i++) {
-                html += '<span class="ticker-item ' + (i === 0 ? 'active' : '') + '">' + items[i] + '</span>';
+                html += '<span class="ticker-item ' + (i === 0 ? 'active' : '') + '">';
+                if (prefix) {
+                    html += '<span class="' + prefixClass + '">' + prefix + ':</span>';
+                }
+                html += items[i] + '</span>';
             }
             container.innerHTML = html;
 
-            // Clear any old interval for this specific ticker
             if (tickerIntervals[id]) {
                 clearInterval(tickerIntervals[id]);
             }
@@ -591,7 +570,7 @@
                     nodes[currentIndex].classList.remove('active');
                     currentIndex = (currentIndex + 1) % nodes.length;
                     nodes[currentIndex].classList.add('active');
-                }, 6000); // Crossfade to next headline every 6 seconds
+                }, 6000); 
             }
         }
 
@@ -678,16 +657,15 @@
                         statusHtml = dayStr + ' ' + timeStr;
                     }
 
-                    html += vsText + '  |  ' + statusHtml; // Append clean text format for new ticker
-                    html += '|||'; // Arbitrary separator to split later
+                    html += vsText + '  |  ' + statusHtml;
+                    html += '|||';
                 }
 
                 if (gamesFound === 0) {
-                    renderTicker('sports-ticker', ['No recent or upcoming games found.']);
+                    renderTicker('sports-ticker', ['No recent or upcoming games found.'], 'Sports');
                 } else {
-                    // Split the generated text format into items for the cycling ticker
                     var items = html.split('|||').filter(Boolean);
-                    renderTicker('sports-ticker', items);
+                    renderTicker('sports-ticker', items, 'Sports');
                 }
             });
         }
@@ -702,7 +680,7 @@
             .then(function(res) { return res.json(); })
             .then(function(json) {
                 if (json.status !== 'ok' || !json.items || json.items.length === 0) {
-                    renderTicker('news-ticker', ['No headlines available.']);
+                    renderTicker('news-ticker', ['No headlines available.'], 'News');
                     return;
                 }
 
@@ -711,7 +689,7 @@
                 for (var i = 0; i < top3.length; i++) {
                     items.push(top3[i].title);
                 }
-                renderTicker('news-ticker', items);
+                renderTicker('news-ticker', items, 'News');
             });
         }
 
@@ -763,7 +741,6 @@
         updateSlowData();
 
         setInterval(updateFastData, 60000); 
-        // Note: Weather and News update every 12 hours via the Hard Refresh functionality at the top.
 
     </script>
 </body>
