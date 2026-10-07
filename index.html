@@ -495,4 +495,239 @@
         function fetchWeather() {
             var url = 'https://api.open-meteo.com/v1/forecast?latitude=42.3601&longitude=-71.0589&current_weather=true&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&timezone=America%2FNew_York';
             fetch(url, { cache: 'no-store' })
-            .then(function(res) { return res
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.current_weather) {
+                    document.getElementById('weather-temp').innerText = Math.round(data.current_weather.temperature) + '°F';
+                    var code = data.current_weather.weathercode;
+                    var desc = 'Clear';
+                    if (code >= 1 && code <= 3) desc = 'Partly Cloudy';
+                    if (code == 45 || code == 48) desc = 'Fog';
+                    if (code >= 51 && code <= 55) desc = 'Drizzle';
+                    if (code >= 61 && code <= 65) desc = 'Rain';
+                    if (code >= 71 && code <= 75) desc = 'Snow';
+                    if (code >= 95) desc = 'Thunderstorm';
+                    document.getElementById('weather-desc').innerText = desc;
+                }
+                if (data.daily) {
+                    var high = Math.round(data.daily.temperature_2m_max[0]);
+                    var low = Math.round(data.daily.temperature_2m_min[0]);
+                    var rainChance = data.daily.precipitation_probability_max[0] || 0;
+                    document.getElementById('weather-details').innerText = 'H: ' + high + '° | L: ' + low + '° | Rain: ' + rainChance + '%';
+                }
+            });
+        }
+
+
+        // --- 6. TICKER CYCLING ---
+        var tickerIntervals = {};
+
+        function renderTicker(id, items, prefix, durationMs, staggerMs) {
+            var container = document.getElementById(id);
+            if (!container) return;
+            if (!items || items.length === 0) items = ['No information available.'];
+
+            var html = '';
+            var prefixClass = id === 'sports-ticker' ? 'prefix-sports' : 'prefix-label';
+
+            for (var i = 0; i < items.length; i++) {
+                html += '<span class="ticker-item ' + (i === 0 ? 'active' : '') + '">';
+                if (prefix) {
+                    html += '<span class="' + prefixClass + '">' + prefix + ':</span>';
+                }
+                html += items[i] + '</span>';
+            }
+            container.innerHTML = html;
+
+            if (tickerIntervals[id]) clearInterval(tickerIntervals[id]);
+
+            var nodes = container.querySelectorAll('.ticker-item');
+            if (nodes.length > 1) {
+                var currentIndex = 0;
+                setTimeout(function() {
+                    tickerIntervals[id] = setInterval(function() {
+                        if (!container.isConnected) {
+                            clearInterval(tickerIntervals[id]);
+                            return;
+                        }
+                        nodes[currentIndex].classList.remove('active');
+                        currentIndex = (currentIndex + 1) % nodes.length;
+                        nodes[currentIndex].classList.add('active');
+                    }, durationMs || 6000); 
+                }, staggerMs || 0);
+            }
+        }
+
+
+        // --- 7. SPORTS ---
+        function fetchSports() {
+            function getFormatDate(offsetDays) {
+                var d = new Date();
+                d.setDate(d.getDate() + offsetDays);
+                var yy = d.getFullYear();
+                var mm = ('0' + (d.getMonth() + 1)).slice(-2);
+                var dd = ('0' + d.getDate()).slice(-2);
+                return yy + mm + dd;
+            }
+            var dateRange = getFormatDate(-1) + '-' + getFormatDate(2);
+            var urls = [
+                'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=' + dateRange,
+                'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=' + dateRange,
+                'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=' + dateRange,
+                'https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard?dates=' + dateRange
+            ];
+
+            var myTeams = ['Boston Red Sox', 'Washington Nationals', 'Washington Commanders', 'Boston Celtics', 'Duke Blue Devils'];
+            var allGames = [];
+
+            Promise.all(urls.map(function(u) {
+                return fetch(u, {cache: 'no-store'}).then(function(res) { return res.json(); }).catch(function(){ return {events:[]}; });
+            }))
+            .then(function(results) {
+                results.forEach(function(league) {
+                    if (league.events) allGames = allGames.concat(league.events);
+                });
+
+                var html = '';
+                var gamesFound = 0;
+                var pastGamesPerTeam = {}; 
+                var futureGamesPerTeam = {}; 
+                allGames.sort(function(a,b) { return new Date(a.date).getTime() - new Date(b.date).getTime(); });
+
+                for (var i = 0; i < allGames.length; i++) {
+                    var game = allGames[i];
+                    var comp = game.competitions[0];
+                    var homeTeam = comp.competitors[0];
+                    var awayTeam = comp.competitors[1];
+
+                    var matchedTeams = [];
+                    if (myTeams.indexOf(homeTeam.team.displayName) !== -1) matchedTeams.push(homeTeam.team.displayName);
+                    if (myTeams.indexOf(awayTeam.team.displayName) !== -1) matchedTeams.push(awayTeam.team.displayName);
+
+                    if (matchedTeams.length === 0) continue;
+
+                    var status = game.status.type;
+                    var isFinal = (status.name === 'STATUS_FINAL');
+                    var isLive = (status.state === 'in');
+
+                    var shouldShow = false;
+                    for (var m = 0; m < matchedTeams.length; m++) {
+                        var tName = matchedTeams[m];
+                        if (isFinal) {
+                            if (!pastGamesPerTeam[tName]) { pastGamesPerTeam[tName] = true; shouldShow = true; }
+                        } else if (isLive) {
+                            shouldShow = true; 
+                        } else {
+                            if (!futureGamesPerTeam[tName]) { futureGamesPerTeam[tName] = true; shouldShow = true; }
+                        }
+                    }
+
+                    if (!shouldShow) continue;
+                    gamesFound++;
+                    var vsText = (awayTeam.team.shortDisplayName || awayTeam.team.name) + ' @ ' + (homeTeam.team.shortDisplayName || homeTeam.team.name);
+                    var statusHtml = '';
+
+                    if (isFinal) {
+                        statusHtml = awayTeam.score + ' - ' + (homeTeam.score || '0');
+                    } else if (isLive) {
+                        statusHtml = '<span style="color:#ff8a75;">LIVE:</span> ' + awayTeam.score + ' - ' + homeTeam.score; 
+                    } else {
+                        var gDate = new Date(game.date);
+                        var dayStr = gDate.toLocaleDateString('en-US', { weekday: 'short' });
+                        var timeStr = gDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                        statusHtml = dayStr + ' ' + timeStr;
+                    }
+
+                    html += vsText + '  |  ' + statusHtml;
+                    html += '|||';
+                }
+
+                if (gamesFound === 0) {
+                    renderTicker('sports-ticker', ['No recent or upcoming games found.'], 'Sports', 6000, 0);
+                } else {
+                    var items = html.split('|||').filter(Boolean);
+                    renderTicker('sports-ticker', items, 'Sports', 6000, 0);
+                }
+            });
+        }
+
+
+        // --- 8. LOCAL BOSTON EVENTS (Fetched from GitHub Actions JSON) ---
+        function fetchEvents() {
+            // Fetch the dynamically scraped JSON file, sorted cleanly by day
+            fetch('events.json?t=' + new Date().getTime(), { cache: 'no-store' })
+            .then(function(res) { 
+                if (!res.ok) throw new Error("HTTP " + res.status);
+                return res.json(); 
+            })
+            .then(function(events) {
+                var fri = events.Friday || ["<span style='font-weight:600;'>No events listed</span>"];
+                var sat = events.Saturday || ["<span style='font-weight:600;'>No events listed</span>"];
+                var sun = events.Sunday || ["<span style='font-weight:600;'>No events listed</span>"];
+
+                // Map each array directly to its dedicated day ticker, prefixing the day
+                renderTicker('events-ticker-1', fri, 'FRI', 3500, 0);
+                renderTicker('events-ticker-2', sat, 'SAT', 3500, 1000);
+                renderTicker('events-ticker-3', sun, 'SUN', 3500, 2000);
+            })
+            .catch(function(err) {
+                var errList = ["<span style='opacity:0.8;'>Waiting for GitHub Actions to generate events.json...</span>"];
+                renderTicker('events-ticker-1', errList, 'FRI', 6000, 0);
+                renderTicker('events-ticker-2', errList, 'SAT', 6000, 0);
+                renderTicker('events-ticker-3', errList, 'SUN', 6000, 0);
+            });
+        }
+
+
+        // --- 9. PHOTO-ONLY REST PERIOD / TOUCH TO RETURN ---
+        var PHOTO_ONLY_AFTER_MS = 2 * 60 * 60 * 1000;
+        var PHOTO_ONLY_DURATION_MS = 45 * 1000;
+        var photoOnlyTimer = null;
+        var photoOnlyExitTimer = null;
+
+        function exitPhotoOnlyMode() {
+            if (!document.body.classList.contains('photo-only')) return;
+            document.body.classList.remove('photo-only');
+            if (photoOnlyExitTimer) {
+                clearTimeout(photoOnlyExitTimer);
+                photoOnlyExitTimer = null;
+            }
+            schedulePhotoOnlyMode();
+        }
+
+        function enterPhotoOnlyMode() {
+            document.body.classList.add('photo-only');
+            photoOnlyExitTimer = setTimeout(exitPhotoOnlyMode, PHOTO_ONLY_DURATION_MS);
+        }
+
+        function schedulePhotoOnlyMode() {
+            if (photoOnlyTimer) clearTimeout(photoOnlyTimer);
+            photoOnlyTimer = setTimeout(enterPhotoOnlyMode, PHOTO_ONLY_AFTER_MS);
+        }
+
+        document.addEventListener('touchend', exitPhotoOnlyMode, false);
+        document.addEventListener('click', exitPhotoOnlyMode, false);
+        schedulePhotoOnlyMode();
+
+
+        // --- 10. TIMERS & INITIALIZATION ---
+        function updateFastData() {
+            fetchSubway();
+            fetchAlerts();
+            fetchSports();
+        }
+        
+        function updateSlowData() {
+            fetchWeather();
+            fetchEvents();
+        }
+
+        updateFastData();
+        updateSlowData();
+
+        // Refreshes trains, alerts, games every minute
+        setInterval(updateFastData, 60000); 
+
+    </script>
+</body>
+</html>
