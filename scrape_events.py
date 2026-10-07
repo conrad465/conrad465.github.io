@@ -7,67 +7,67 @@ import datetime
 def scrape_events():
     today = datetime.date.today()
     
-    # Calculate the upcoming Saturday (The Boston Calendar centers weekend queries on Saturday)
+    # Target the upcoming Saturday to center the weekend query
     days_ahead = 5 - today.weekday() # 5 is Saturday
-    if days_ahead < -1: # If it is Sunday (-1), keep it on the current weekend. Otherwise skip to next.
+    if days_ahead < -1:
         days_ahead += 7
     target = today + datetime.timedelta(days=days_ahead)
     
-    # Using your exact URL format, but making the date dynamic so it never breaks
+    # Dynamic URL using your exact tags and the calculated weekend date
     url = f'https://www.thebostoncalendar.com/events?day={target.day}&year={target.year}&month={target.month}&weekend=1&tags%5B%5D=Date+Idea&tags%5B%5D=Festivals+%26+Fairs&tags%5B%5D=Food&tags%5B%5D=Music'
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
     
     events_by_day = {"Friday": [], "Saturday": [], "Sunday": []}
     
     try:
+        print(f"Fetching from: {url}")
         response = requests.get(url, headers=headers, timeout=15)
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        for node in soup.select('li.event'):
-            title_node = node.select_one('h3')
-            time_node = node.select_one('.time')
-            loc_node = node.select_one('.location')
-            desc_node = node.select_one('.description')
-            tags_node = node.select_one('.tags')
+        current_day = "Saturday" # Default fallback
+        
+        # Read the HTML page top-to-bottom
+        for element in soup.find_all(['h2', 'li']):
             
-            title = title_node.text.strip() if title_node else ''
-            time_str = re.sub(r'\s+', ' ', time_node.text).strip() if time_node else ''
-            loc = loc_node.text.strip() if loc_node else 'Boston'
-            desc = desc_node.text.strip() if desc_node else ''
-            tags = tags_node.text.lower() if tags_node else ''
-            
-            # Skip recurring/ongoing events
-            if re.search(r'recurring|ongoing|every|weekly', title, re.I) or re.search(r'recurring|ongoing|every|weekly', desc, re.I) or 'recurring' in tags:
-                continue
+            # When we see a header, figure out what day we are in
+            if element.name == 'h2':
+                text = element.text.lower()
+                if 'friday' in text:
+                    current_day = "Friday"
+                elif 'saturday' in text:
+                    current_day = "Saturday"
+                elif 'sunday' in text:
+                    current_day = "Sunday"
+                    
+            # When we see an event, put it into the bucket for the current_day
+            elif element.name == 'li' and 'event' in element.get('class', []):
+                title_node = element.select_one('h3')
+                loc_node = element.select_one('.location')
+                desc_node = element.select_one('.description')
+                tags_node = element.select_one('.tags')
                 
-            clean_desc = re.sub(r'\s+', ' ', desc).strip()
-            if len(clean_desc) > 100:
-                clean_desc = clean_desc[:100] + '...'
+                title = title_node.text.strip() if title_node else ''
+                loc = loc_node.text.strip() if loc_node else 'Boston'
+                desc = desc_node.text.strip() if desc_node else ''
+                tags = tags_node.text.lower() if tags_node else ''
                 
-            display_loc = loc.split(',')[0].strip()
-            
-            # We removed the date from the string itself because the bar label (FRI/SAT/SUN) will handle it!
-            display_str = f"<span style='font-weight:600;'>{title}</span>  |  {display_loc}  |  <span style='opacity:0.8; font-size: 21px;'>{clean_desc}</span>"
-            
-            # Sort into the correct day bucket
-            if re.search(r'Friday|Fri', time_str, re.I):
-                events_by_day["Friday"].append(display_str)
-            elif re.search(r'Saturday|Sat', time_str, re.I):
-                events_by_day["Saturday"].append(display_str)
-            elif re.search(r'Sunday|Sun', time_str, re.I):
-                events_by_day["Sunday"].append(display_str)
+                # Skip recurring/ongoing events
+                if re.search(r'recurring|ongoing|every|weekly', title, re.I) or re.search(r'recurring|ongoing|every|weekly', desc, re.I) or 'recurring' in tags:
+                    continue
+                    
+                # Clean up description text to fit the iPad screen
+                clean_desc = re.sub(r'\s+', ' ', desc).strip()
+                if len(clean_desc) > 100:
+                    clean_desc = clean_desc[:100] + '...'
+                    
+                display_loc = loc.split(',')[0].strip()
+                
+                # Format the text with frosted glass inline styling
+                display_str = f"<span style='font-weight:600;'>{title}</span>  |  {display_loc}  |  <span style='opacity:0.8; font-size: 21px;'>{clean_desc}</span>"
+                
+                # Add to the correct Friday/Saturday/Sunday list!
+                events_by_day[current_day].append(display_str)
                 
     except Exception as e:
         err = f"<span style='color:#ff8a75;'>System Error</span>  |  <span style='font-weight:600;'>Scrape Failed</span>  |  <span style='opacity:0.8; font-size: 21px;'>{str(e)[:60]}</span>"
-        events_by_day = {"Friday": [err], "Saturday": [err], "Sunday": [err]}
-
-    # Fill in blanks if a specific day has zero matching events
-    for day in ["Friday", "Saturday", "Sunday"]:
-        if not events_by_day[day]:
-            events_by_day[day] = [f"<span style='font-weight:600;'>No matching events found</span>  |  Boston  |  <span style='opacity:0.8; font-size: 21px;'>No selected categories running this day.</span>"]
-            
-    with open('events.json', 'w') as f:
-        json.dump(events_by_day, f)
-
-if __name__ == '__main__':
-    scrape_events()
+        events_by_day = {"Friday": [err], "Saturday
