@@ -666,9 +666,9 @@
                 var sun = events.Sunday || ["<span style='font-weight:600;'>No events listed</span>"];
 
                 // Map each array directly to its dedicated day ticker, prefixing the day
-                renderTicker('events-ticker-1', fri, 'FRI', 3500, 0);
-                renderTicker('events-ticker-2', sat, 'SAT', 3500, 1000);
-                renderTicker('events-ticker-3', sun, 'SUN', 3500, 2000);
+                renderTicker('events-ticker-1', fri, 'FRI', 6000, 0);
+                renderTicker('events-ticker-2', sat, 'SAT', 6000, 1000);
+                renderTicker('events-ticker-3', sun, 'SUN', 6000, 2000);
             })
             .catch(function(err) {
                 var errList = ["<span style='opacity:0.8;'>Waiting for GitHub Actions to generate events.json...</span>"];
