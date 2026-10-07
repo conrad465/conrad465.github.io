@@ -9,19 +9,19 @@ import xml.etree.ElementTree as ET
 def update_events():
     today = datetime.date.today()
     
-    # Target the upcoming Friday to Monday morning
-    days_to_friday = 4 - today.weekday() # 4 is Friday
-    if days_to_friday < 0:
-        days_to_friday += 7
-    
+    # Lock onto the Friday of the *current* week (Monday=0 ... Sunday=6).
+    # This prevents the scraper from rolling forward to next weekend when it runs on Sat/Sun.
+    days_to_friday = 4 - today.weekday() 
     friday = today + datetime.timedelta(days=days_to_friday)
+    saturday = friday + datetime.timedelta(days=1)
+    sunday = friday + datetime.timedelta(days=2)
     monday = friday + datetime.timedelta(days=3)
     
     # Format dates exactly as the API expects
     gte_date = f"{friday.strftime('%Y-%m-%d')}T04:00:00.000Z"
     lte_date = f"{monday.strftime('%Y-%m-%d')}T03:59:59.000Z"
     
-    # Reconstruct the Meet Boston JSON filter dynamically
+    # Reconstruct the Meet Boston JSON filter
     base_filter = {
         "active": True,
         "$and": [
@@ -47,7 +47,6 @@ def update_events():
         "sort": {"nextDate": 1, "rank": 1, "title_sort": 1}
     }
     
-    # Safely URL-encode the JSON payloads
     encoded_filter = urllib.parse.quote(json.dumps(base_filter, separators=(',', ':')))
     encoded_options = urllib.parse.quote(json.dumps(options, separators=(',', ':')))
     
@@ -57,35 +56,46 @@ def update_events():
     events_by_day = {"Friday": [], "Saturday": [], "Sunday": []}
     
     try:
-        print("Fetching RSS feed...")
+        print(f"Fetching RSS feed for weekend of {friday}...")
         response = requests.get(url, headers=headers, timeout=15)
         response.raise_for_status()
         
-        # Parse the XML response
         root = ET.fromstring(response.content)
         
-        # Loop through all events in the RSS channel
         for item in root.findall('./channel/item'):
             title_node = item.find('title')
-            pub_date_node = item.find('pubDate')
             desc_node = item.find('description')
+            pub_date_node = item.find('pubDate')
             
             title = html.unescape(title_node.text).strip() if title_node is not None else ''
-            pub_date_raw = pub_date_node.text if pub_date_node is not None else ''
             description_raw = desc_node.text if desc_node is not None else ''
+            pub_date_raw = pub_date_node.text if pub_date_node is not None else ''
             
-            # Use the RSS pubDate to bucket into Friday/Saturday/Sunday
-            current_day = "Saturday" # Default fallback
-            if pub_date_raw.startswith("Fri"): current_day = "Friday"
-            elif pub_date_raw.startswith("Sat"): current_day = "Saturday"
-            elif pub_date_raw.startswith("Sun"): current_day = "Sunday"
-            elif pub_date_raw.startswith("Thu") or pub_date_raw.startswith("Wed"): continue # Skip weekday stragglers
+            # 1. Parse the actual multi-day span from the description text
+            date_match = re.search(r'(\d{2}/\d{2}/\d{4})\s+to\s+(\d{2}/\d{2}/\d{4})', description_raw)
+            active_days = []
             
-            # The description contains HTML (CDDATA). Extract only the text inside the <p> tags.
+            if date_match:
+                start_date = datetime.datetime.strptime(date_match.group(1), "%m/%d/%Y").date()
+                end_date = datetime.datetime.strptime(date_match.group(2), "%m/%d/%Y").date()
+                
+                # If a festival runs Friday through Sunday, it will now appear on all 3 days
+                if start_date <= friday <= end_date: active_days.append("Friday")
+                if start_date <= saturday <= end_date: active_days.append("Saturday")
+                if start_date <= sunday <= end_date: active_days.append("Sunday")
+            else:
+                # Fallback to pubDate if the description parsing fails
+                if "Fri" in pub_date_raw: active_days.append("Friday")
+                elif "Sat" in pub_date_raw: active_days.append("Saturday")
+                elif "Sun" in pub_date_raw: active_days.append("Sunday")
+            
+            if not active_days:
+                continue
+                
+            # 2. Extract clean text description
             clean_desc = ""
             p_match = re.search(r'<p.*?>(.*?)</p>', description_raw, re.IGNORECASE | re.DOTALL)
             if p_match:
-                # Strip out inner HTML tags (like <br> or <span>) and unescape HTML entities
                 raw_text = re.sub(r'<[^>]+>', ' ', p_match.group(1))
                 clean_desc = html.unescape(raw_text).strip()
                 clean_desc = re.sub(r'\s+', ' ', clean_desc)
@@ -96,12 +106,15 @@ def update_events():
                 clean_desc = "See event page for details."
                 
             display_str = f"<span style='font-weight:600;'>{title}</span>  |  Boston  |  <span style='opacity:0.8; font-size: 21px;'>{clean_desc}</span>"
-            events_by_day[current_day].append(display_str)
             
+            for day in active_days:
+                events_by_day[day].append(display_str)
+                
     except Exception as e:
         err = f"<span style='color:#ff8a75;'>System Error</span>  |  <span style='font-weight:600;'>RSS Failed</span>  |  <span style='opacity:0.8; font-size: 21px;'>{str(e)[:60]}</span>"
         events_by_day = {"Friday": [err], "Saturday": [err], "Sunday": [err]}
 
+    # Fill in blank states
     for day in ["Friday", "Saturday", "Sunday"]:
         if not events_by_day[day]:
             events_by_day[day] = [f"<span style='font-weight:600;'>No matching events found</span>  |  Boston  |  <span style='opacity:0.8; font-size: 21px;'>No events scheduled for this day.</span>"]
