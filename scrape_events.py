@@ -70,4 +70,15 @@ def scrape_events():
                 
     except Exception as e:
         err = f"<span style='color:#ff8a75;'>System Error</span>  |  <span style='font-weight:600;'>Scrape Failed</span>  |  <span style='opacity:0.8; font-size: 21px;'>{str(e)[:60]}</span>"
-        events_by_day = {"Friday": [err], "Saturday
+        events_by_day = {"Friday": [err], "Saturday": [err], "Sunday": [err]}
+
+    # Fill in blanks if a specific day has zero non-recurring events
+    for day in ["Friday", "Saturday", "Sunday"]:
+        if not events_by_day[day]:
+            events_by_day[day] = [f"<span style='font-weight:600;'>No matching events found</span>  |  Boston  |  <span style='opacity:0.8; font-size: 21px;'>No selected categories running this day.</span>"]
+            
+    with open('events.json', 'w') as f:
+        json.dump(events_by_day, f)
+
+if __name__ == '__main__':
+    scrape_events()
