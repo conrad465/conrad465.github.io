@@ -1,0 +1,33 @@
+name: Update Boston Events
+
+on:
+  schedule:
+    - cron: '0 4,16 * * *' # Runs at 12 AM and 12 PM EST automatically
+  workflow_dispatch: # Allows you to click "Run Workflow" manually in GitHub
+
+permissions:
+  contents: write # Allows GitHub to save the file back to your repo
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4
+
+      - name: Run Scraper
+        run: python scrape_events.py
+
+      - name: Commit and Push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Auto-update Boston events.json"
+          file_pattern: "events.json"
