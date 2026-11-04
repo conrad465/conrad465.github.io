@@ -569,23 +569,37 @@
                 var dd = ('0' + d.getDate()).slice(-2);
                 return yy + mm + dd;
             }
-            var dateRange = getFormatDate(-1) + '-' + getFormatDate(2);
-            var urls = [
-                'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=' + dateRange,
-                'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=' + dateRange,
-                'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=' + dateRange,
-                'https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard?dates=' + dateRange
+            // ESPN's scoreboard API no longer accepts "dates=YYYYMMDD-YYYYMMDD" ranges
+            // (returns HTTP 400), so request each day individually and merge.
+            // Window: yesterday through 6 days out, so weekly sports (NFL) are covered.
+            var leagues = [
+                'baseball/mlb',
+                'football/nfl',
+                'basketball/nba',
+                'basketball/mens-college-basketball'
             ];
+            var urls = [];
+            for (var dayOffset = -1; dayOffset <= 6; dayOffset++) {
+                for (var l = 0; l < leagues.length; l++) {
+                    var extra = leagues[l].indexOf('college') !== -1 ? '&groups=50&limit=400' : '';
+                    urls.push('https://site.api.espn.com/apis/site/v2/sports/' + leagues[l] + '/scoreboard?dates=' + getFormatDate(dayOffset) + extra);
+                }
+            }
 
             var myTeams = ['Boston Red Sox', 'Washington Nationals', 'Washington Commanders', 'Boston Celtics', 'Duke Blue Devils'];
             var allGames = [];
 
             Promise.all(urls.map(function(u) {
-                return fetch(u, {cache: 'no-store'}).then(function(res) { return res.json(); }).catch(function(){ return {events:[]}; });
+                return fetch(u, {cache: 'no-store'}).then(function(res) { return res.ok ? res.json() : {events:[]}; }).catch(function(){ return {events:[]}; });
             }))
             .then(function(results) {
+                var seenIds = {};
                 results.forEach(function(league) {
-                    if (league.events) allGames = allGames.concat(league.events);
+                    (league.events || []).forEach(function(ev) {
+                        if (seenIds[ev.id]) return;
+                        seenIds[ev.id] = true;
+                        allGames.push(ev);
+                    });
                 });
 
                 var html = '';
@@ -597,8 +611,8 @@
                 for (var i = 0; i < allGames.length; i++) {
                     var game = allGames[i];
                     var comp = game.competitions[0];
-                    var homeTeam = comp.competitors[0];
-                    var awayTeam = comp.competitors[1];
+                    var homeTeam = comp.competitors.filter(function(c) { return c.homeAway === 'home'; })[0] || comp.competitors[0];
+                    var awayTeam = comp.competitors.filter(function(c) { return c.homeAway === 'away'; })[0] || comp.competitors[1];
 
                     var matchedTeams = [];
                     if (myTeams.indexOf(homeTeam.team.displayName) !== -1) matchedTeams.push(homeTeam.team.displayName);
