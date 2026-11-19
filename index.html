@@ -492,28 +492,79 @@
 
 
         // --- 5. WEATHER ---
+        // Current temp/conditions come from the latest real observation at Boston Logan
+        // (NWS station KBOS). Open-Meteo supplies today's high/low/rain chance, and is the
+        // fallback for current conditions if the NWS observation is missing or stale.
+        function describeWmoCode(code) {
+            if (code === 0) return 'Clear';
+            if (code === 1) return 'Mostly Clear';
+            if (code === 2) return 'Partly Cloudy';
+            if (code === 3) return 'Overcast';
+            if (code === 45 || code === 48) return 'Fog';
+            if (code >= 51 && code <= 55) return 'Drizzle';
+            if (code === 56 || code === 57) return 'Freezing Drizzle';
+            if (code >= 61 && code <= 65) return 'Rain';
+            if (code === 66 || code === 67) return 'Freezing Rain';
+            if (code >= 71 && code <= 75) return 'Snow';
+            if (code === 77) return 'Snow Grains';
+            if (code >= 80 && code <= 82) return 'Rain Showers';
+            if (code === 85 || code === 86) return 'Snow Showers';
+            if (code >= 95) return 'Thunderstorm';
+            return '';
+        }
+
         function fetchWeather() {
-            var url = 'https://api.open-meteo.com/v1/forecast?latitude=42.3601&longitude=-71.0589&current_weather=true&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&timezone=America%2FNew_York';
-            fetch(url, { cache: 'no-store' })
-            .then(function(res) { return res.json(); })
-            .then(function(data) {
-                if (data.current_weather) {
-                    document.getElementById('weather-temp').innerText = Math.round(data.current_weather.temperature) + '°F';
-                    var code = data.current_weather.weathercode;
-                    var desc = 'Clear';
-                    if (code >= 1 && code <= 3) desc = 'Partly Cloudy';
-                    if (code == 45 || code == 48) desc = 'Fog';
-                    if (code >= 51 && code <= 55) desc = 'Drizzle';
-                    if (code >= 61 && code <= 65) desc = 'Rain';
-                    if (code >= 71 && code <= 75) desc = 'Snow';
-                    if (code >= 95) desc = 'Thunderstorm';
+            var forecastUrl = 'https://api.open-meteo.com/v1/forecast?latitude=42.3601&longitude=-71.0589' +
+                '&current=temperature_2m,weather_code' +
+                '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max' +
+                '&temperature_unit=fahrenheit&timezone=America%2FNew_York&forecast_days=1';
+            var obsUrl = 'https://api.weather.gov/stations/KBOS/observations/latest';
+
+            var forecastReq = fetch(forecastUrl, { cache: 'no-store' })
+                .then(function(res) { return res.json(); })
+                .then(function(data) { return (data && !data.error) ? data : null; })
+                .catch(function() { return null; });
+
+            var obsReq = fetch(obsUrl, { cache: 'no-store', headers: { 'Accept': 'application/geo+json' } })
+                .then(function(res) { return res.ok ? res.json() : null; })
+                .then(function(data) {
+                    var p = data && data.properties;
+                    if (!p || !p.temperature || p.temperature.value === null) return null;
+                    // Ignore observations older than 2 hours
+                    if (Date.now() - new Date(p.timestamp).getTime() > 2 * 60 * 60 * 1000) return null;
+                    return { tempF: p.temperature.value * 9 / 5 + 32, desc: p.textDescription || '' };
+                })
+                .catch(function() { return null; });
+
+            Promise.all([forecastReq, obsReq]).then(function(r) {
+                var fc = r[0], obs = r[1];
+                var currentTemp = null, desc = '';
+
+                if (obs) {
+                    currentTemp = obs.tempF;
+                    desc = obs.desc;
+                }
+                if (fc && fc.current) {
+                    if (currentTemp === null) currentTemp = fc.current.temperature_2m;
+                    if (!desc) desc = describeWmoCode(fc.current.weather_code);
+                }
+
+                // On total failure, keep whatever is already displayed
+                if (currentTemp !== null) {
+                    document.getElementById('weather-temp').innerText = Math.round(currentTemp) + '°F';
+                }
+                if (desc) {
                     document.getElementById('weather-desc').innerText = desc;
                 }
-                if (data.daily) {
-                    var high = Math.round(data.daily.temperature_2m_max[0]);
-                    var low = Math.round(data.daily.temperature_2m_min[0]);
-                    var rainChance = data.daily.precipitation_probability_max[0] || 0;
-                    document.getElementById('weather-details').innerText = 'H: ' + high + '° | L: ' + low + '° | Rain: ' + rainChance + '%';
+                if (fc && fc.daily) {
+                    var high = fc.daily.temperature_2m_max[0];
+                    var low = fc.daily.temperature_2m_min[0];
+                    if (currentTemp !== null) {
+                        high = Math.max(high, currentTemp);
+                        low = Math.min(low, currentTemp);
+                    }
+                    var rainChance = fc.daily.precipitation_probability_max[0] || 0;
+                    document.getElementById('weather-details').innerText = 'H: ' + Math.round(high) + '° | L: ' + Math.round(low) + '° | Rain: ' + rainChance + '%';
                 }
             });
         }
@@ -741,6 +792,9 @@
 
         // Refreshes trains, alerts, games every minute
         setInterval(updateFastData, 60000); 
+
+        // Refreshes weather every 10 minutes (previously only on page load)
+        setInterval(fetchWeather, 10 * 60 * 1000);
 
     </script>
 </body>
